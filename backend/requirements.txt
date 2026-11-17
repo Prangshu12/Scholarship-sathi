@@ -5,3 +5,4 @@ pyjwt
 passlib[bcrypt]
 pydantic[email]
 sqlalchemy
+bcrypt==4.0.1

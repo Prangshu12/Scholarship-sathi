@@ -1,0 +1,30 @@
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from backend.auth import UserResponse, get_current_user, router as auth_router
+from backend.database import Base, engine
+from backend.models import User
+
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="Scholarship Sathi API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:300000", "http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth_router)
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+
+@app.get("/api/auth/me", response_model=UserResponse)
+def read_current_user(current_user: User = Depends(get_current_user)):
+    return current_user

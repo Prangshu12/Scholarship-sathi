@@ -33,7 +33,7 @@ import {
 // ============================================================================
 const DEFAULT_API_CONFIG = {
   BACKEND_BASE_URL: 'http://localhost:5000/api',
-  ML_API_BASE_URL: 'http://localhost:8000/ml',
+  ML_API_BASE_URL: 'http://localhost:5000/ml',
   USE_MOCK_FALLBACK: true,
   ENDPOINTS: {
     LOGIN: '/auth/login',
@@ -916,7 +916,7 @@ export default function ScholarsSathi() {
             >
               <span>Scholarship Explorer</span>
               <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                {DEFAULT_SCHOLARSHIPS.length} Live
+                {enrichedScholarships.length || DEFAULT_SCHOLARSHIPS.length} Live
               </span>
             </button>
             <button

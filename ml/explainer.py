@@ -22,21 +22,38 @@ PRD rules (Objective O4)
 
 LLM provider setup
 -------------------
-Set the environment variable before running:
-
-    export GEMINI_API_KEY="your-key-here"        # Google Gemini (default)
-
-If no key is set, the module falls back to the template explanation
-automatically — the rest of the application continues to work.
-
-Install the SDK (only if you want live LLM explanations):
-    pip install google-generativeai
+Automatically loads GEMINI_API_KEY from the project root `.env` file
+(or environment variable). If no key is set or the network is unavailable,
+the module falls back to the template explanation automatically.
 """
 
 import os
+import json
 import hashlib
 import textwrap
+import urllib.request
+import urllib.error
 import pandas as pd
+
+# ---------------------------------------------------------------------------
+# Auto-load .env from project root so GEMINI_API_KEY works out of the box
+# ---------------------------------------------------------------------------
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ENV_PATH = os.path.join(_PROJECT_ROOT, ".env")
+
+if os.path.exists(_ENV_PATH):
+    try:
+        with open(_ENV_PATH, "r", encoding="utf-8") as _f:
+            for _line in _f:
+                _line = _line.strip()
+                if _line and not _line.startswith("#") and "=" in _line:
+                    _k, _v = _line.split("=", 1)
+                    _k = _k.strip()
+                    _v = _v.strip().strip('"').strip("'")
+                    if _k and _k not in os.environ:
+                        os.environ[_k] = _v
+    except Exception:
+        pass
 
 # ---------------------------------------------------------------------------
 # Simple in-memory cache  {hash → explanation string}
@@ -58,11 +75,6 @@ def template_explanation(scholarship: dict, student: dict) -> str:
     - The LLM call times out
     - The LLM call raises any exception
     - The LLM returns an empty response
-
-    What it does
-    ------------
-    Fills a fixed template with real values from the scholarship dict
-    and the student profile dict. Every sentence is grounded in data.
     """
     name            = scholarship.get("name", "This scholarship")
     course          = scholarship.get("course", "")
@@ -75,12 +87,7 @@ def template_explanation(scholarship: dict, student: dict) -> str:
     states          = scholarship.get("eligible states", "")
     income_limit    = scholarship.get("income limit", "")
 
-    student_course  = student.get("course", "your course")
-    student_name    = student.get("name", "You")
-
-    # Build the explanation sentence by sentence from real data
     lines = []
-
     lines.append(f"**{name}**")
     lines.append("")
 
@@ -92,6 +99,7 @@ def template_explanation(scholarship: dict, student: dict) -> str:
         match_reason.append("it is open to all genders")
     elif gender:
         match_reason.append(f"it is available for {gender} students")
+
     caste_clean = "" if pd.isna(caste) else str(caste).strip()
     if not caste_clean:
         match_reason.append("no caste restriction applies")
@@ -146,7 +154,7 @@ def _cache_key(scholarship: dict, student: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
-# LLM explanation (Gemini)
+# LLM explanation (Google Gemini API)
 # ---------------------------------------------------------------------------
 
 def _build_prompt(scholarship: dict, student: dict) -> str:
@@ -194,45 +202,42 @@ def _build_prompt(scholarship: dict, student: dict) -> str:
 
 def _call_gemini(prompt: str, timeout_seconds: int = 9) -> str:
     """
-    Call the Gemini API with the given prompt.
-    Returns the response text, or raises an exception on failure.
+    Call the Google Gemini REST API with the given prompt and a strict
+    9-second timeout (thread-safe across both CLI scripts and FastAPI).
+    Returns the generated text, or raises an exception on failure.
     """
-    try:
-        import google.generativeai as genai  # type: ignore
-    except ImportError:
-        raise RuntimeError(
-            "google-generativeai package not installed. "
-            "Run: pip install google-generativeai"
-        )
-
-    api_key = os.environ.get("GEMINI_API_KEY", "")
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY environment variable not set.")
 
-    genai.configure(api_key=api_key)
+    models = ["gemini-3.1-flash-lite-preview", "gemini-3-flash-preview", "gemma-4-26b-a4b-it"]
+    payload = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}]
+    }).encode("utf-8")
 
-    import signal
+    last_error = None
+    for model_name in models:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+        req = urllib.request.Request(
+            url,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                candidates = data.get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    text = "".join(p.get("text", "") for p in parts).strip()
+                    if text:
+                        return text
+        except Exception as e:
+            last_error = e
+            continue
 
-    def _timeout_handler(signum, frame):
-        raise TimeoutError(f"Gemini API call exceeded {timeout_seconds}s limit.")
-
-    # Use SIGALRM for timeout on Linux/Mac (not available on Windows)
-    if hasattr(signal, "SIGALRM"):
-        signal.signal(signal.SIGALRM, _timeout_handler)
-        signal.alarm(timeout_seconds)
-
-    try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content(prompt)
-        text = response.text.strip()
-    finally:
-        if hasattr(signal, "SIGALRM"):
-            signal.alarm(0)   # Cancel the alarm
-
-    if not text:
-        raise RuntimeError("LLM returned an empty response.")
-
-    return text
+    raise RuntimeError(f"Gemini API call failed: {last_error}")
 
 
 # ---------------------------------------------------------------------------
@@ -242,21 +247,6 @@ def _call_gemini(prompt: str, timeout_seconds: int = 9) -> str:
 def get_explanation(scholarship: pd.Series | dict, student: dict) -> dict:
     """
     Return a plain-language explanation for a scholarship + student pair.
-
-    What it does
-    ------------
-    1. Converts the scholarship to a plain dict (works with both a
-       pandas Series row and a plain dict).
-    2. Checks the in-memory cache — if already explained, returns cached.
-    3. Tries the Gemini LLM with a 9-second timeout.
-    4. Falls back to the template if anything goes wrong.
-    5. Caches and returns the result.
-
-    Why we need it
-    --------------
-    The PRD (Objective O4) requires personalised, plain-language
-    explanations so students understand WHY a scholarship matches them,
-    not just WHICH scholarships match.
 
     Parameters
     ----------
@@ -272,7 +262,6 @@ def get_explanation(scholarship: pd.Series | dict, student: dict) -> dict:
         "source"      : str   — "llm" | "template" | "cache"
         "scholarship" : str   — scholarship name
     """
-    # Normalise to plain dict
     if isinstance(scholarship, pd.Series):
         scholarship_dict = scholarship.to_dict()
     else:
@@ -294,12 +283,10 @@ def get_explanation(scholarship: pd.Series | dict, student: dict) -> dict:
     try:
         prompt      = _build_prompt(scholarship_dict, student)
         explanation = _call_gemini(prompt, timeout_seconds=9)
-    except Exception as e:
+    except Exception:
         # Any failure → silent fallback to template
         explanation = template_explanation(scholarship_dict, student)
         source      = "template"
-        # Uncomment next line to debug LLM errors during development:
-        # print(f"  [explainer] LLM fallback for '{name}': {e}")
 
     # Cache and return
     _EXPLANATION_CACHE[key] = explanation
@@ -317,24 +304,9 @@ def get_explanations_for_recommendations(
 ) -> list[dict]:
     """
     Generate explanations for each row in a recommendations DataFrame.
-
-    Parameters
-    ----------
-    recommendations : pd.DataFrame
-        Output of recommend_scholarships() — top-N rows with 'name' column.
-    full_df : pd.DataFrame
-        The full scholarship DataFrame (to look up complete row data).
-    student : dict
-        Student profile dict.
-
-    Returns
-    -------
-    list of dicts, one per recommendation, each containing:
-        "rank", "scholarship", "similarity_score", "explanation", "source"
     """
     results = []
     for rank, row in recommendations.iterrows():
-        # Look up the full record from the original DataFrame by name
         name = row["name"]
         matches = full_df[full_df["name"] == name]
 
@@ -387,7 +359,7 @@ if __name__ == "__main__":
     recs    = recommend_scholarships(student, df, matrix, vectorizer, top_n=3)
 
     api_key_set = bool(os.environ.get("GEMINI_API_KEY", ""))
-    print(f"\nGEMINI_API_KEY: {'SET — will attempt LLM' if api_key_set else 'NOT SET — using template fallback'}")
+    print(f"\nGEMINI_API_KEY: {'SET (from .env) — calling live Google Gemini LLM!' if api_key_set else 'NOT SET — using template fallback'}")
 
     print("\nGenerating explanations...\n")
     explained = get_explanations_for_recommendations(recs, df, student)
@@ -402,8 +374,3 @@ if __name__ == "__main__":
 
     print("=" * 65)
     print("Demo complete.")
-    print()
-    print("To enable LLM explanations:")
-    print("  1. pip install google-generativeai")
-    print("  2. export GEMINI_API_KEY='your-key-here'")
-    print("  3. python ml/explainer.py")

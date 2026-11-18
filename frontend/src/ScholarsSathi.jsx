@@ -421,6 +421,8 @@ class UiSoundEngine {
   constructor() {
     this.ctx = null;
     this.enabled = true;
+    this.lastClickTime = 0;
+    this.lastSpecialSoundTime = 0;
   }
 
   init() {
@@ -435,122 +437,77 @@ class UiSoundEngine {
     }
   }
 
-  play(type) {
+  // Universal subtle, tactile click for EVERY clickable element
+  playSubtleClick() {
     if (!this.enabled) return;
+    const now = Date.now();
+    // Suppress subtle click if special sound was just triggered
+    if (now - this.lastSpecialSoundTime < 300) return;
+    // Debounce rapid nested triggers
+    if (now - this.lastClickTime < 35) return;
+    this.lastClickTime = now;
+
     try {
       this.init();
       if (!this.ctx) return;
       const t = this.ctx.currentTime;
 
-      if (type === 'click') {
-        // Subtle crisp tactile click (pop)
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(650, t);
-        osc.frequency.exponentialRampToValueAtTime(220, t + 0.035);
-        gain.gain.setValueAtTime(0.06, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.04);
-      } else if (type === 'toggle') {
-        // Dual-tone toggle chime (light / dark mode / sound)
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, t);
-        osc.frequency.exponentialRampToValueAtTime(880, t + 0.08);
-        gain.gain.setValueAtTime(0.07, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.085);
-      } else if (type === 'check') {
-        // Uplifting checkmark blip (C5 -> G5)
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(523.25, t); // C5
-        osc.frequency.setValueAtTime(783.99, t + 0.05); // G5
-        gain.gain.setValueAtTime(0.08, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.14);
-      } else if (type === 'uncheck') {
-        // Soft descending blip
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, t); // D5
-        osc.frequency.setValueAtTime(392.00, t + 0.04); // G4
-        gain.gain.setValueAtTime(0.05, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.095);
-      } else if (type === 'modalOpen') {
-        // Gentle airy whoosh/expansion chime (F4 -> C5)
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(349.23, t);
-        osc.frequency.exponentialRampToValueAtTime(523.25, t + 0.11);
-        gain.gain.setValueAtTime(0.05, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.14);
-      } else if (type === 'modalClose') {
-        // Soft receding pop
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, t);
-        osc.frequency.exponentialRampToValueAtTime(260, t + 0.06);
-        gain.gain.setValueAtTime(0.04, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.08);
-      } else if (type === 'success') {
-        // Uplifting 3-note victory arpeggio (C5 -> E5 -> G5)
-        [523.25, 659.25, 783.99].forEach((freq, idx) => {
-          const noteTime = t + idx * 0.06;
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, noteTime);
-          gain.gain.setValueAtTime(0.06, noteTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, noteTime + 0.15);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(noteTime);
-          osc.stop(noteTime + 0.16);
-        });
-      } else if (type === 'nav') {
-        // Subtle soft tap for page navigation
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(680, t);
-        osc.frequency.exponentialRampToValueAtTime(340, t + 0.035);
-        gain.gain.setValueAtTime(0.05, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.045);
-      }
+      // Soft, warm, luxurious tactile micro-pop (580Hz -> 160Hz over 22ms)
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(580, t);
+      osc.frequency.exponentialRampToValueAtTime(160, t + 0.022);
+
+      gain.gain.setValueAtTime(0.032, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.022);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + 0.025);
     } catch {
       // AudioContext policy or unsupported browser - fail silently
+    }
+  }
+
+  // Dedicated Special Sound Effect for AI ML Matching & Evaluation
+  playSpecial() {
+    if (!this.enabled) return;
+    this.lastSpecialSoundTime = Date.now();
+
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+
+      // Prestigious 4-note ascending academic fanfare (C5 -> E5 -> G5 -> C6)
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const noteTime = t + idx * 0.06;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, noteTime);
+        gain.gain.setValueAtTime(0.06, noteTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.16);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(noteTime);
+        osc.stop(noteTime + 0.18);
+      });
+    } catch {
+      // AudioContext policy or unsupported browser - fail silently
+    }
+  }
+
+  play(type) {
+    if (!this.enabled) return;
+    if (type === 'special' || type === 'success') {
+      this.playSpecial();
+    } else {
+      this.playSubtleClick();
     }
   }
 }
@@ -649,6 +606,34 @@ export default function ScholarsSathi() {
   }, []);
 
   const showNavbar = isHeaderVisible || isHovered;
+
+  // Global Click Event Listener: Guarantees every clickable element produces the subtle sound consistently
+  useEffect(() => {
+    const handleGlobalClick = (e) => {
+      if (!soundFx.enabled) return;
+      const target = e.target;
+      if (!target || !(target instanceof Element)) return;
+
+      // Check if this click was on a special AI/ML action
+      const specialEl = target.closest('[data-sound="special"]');
+      if (specialEl) {
+        soundFx.playSpecial();
+        return;
+      }
+
+      // Check if clicked element or any parent is clickable/interactive
+      const clickable = target.closest(
+        'button, a, select, textarea, input, label, [role="button"], [role="tab"], [role="checkbox"], .cursor-pointer'
+      );
+
+      if (clickable) {
+        soundFx.playSubtleClick();
+      }
+    };
+
+    document.addEventListener('click', handleGlobalClick, { capture: true, passive: true });
+    return () => document.removeEventListener('click', handleGlobalClick, { capture: true });
+  }, []);
 
   // API Configuration State (Backend + ML Model Service)
   const [apiConfig, setApiConfig] = useState(() => {
@@ -1800,6 +1785,7 @@ export default function ScholarsSathi() {
 
                       <button
                         type="submit"
+                        data-sound="special"
                         className="w-full py-3 rounded-xl bg-[#642D42] hover:bg-[#522435] text-[#F8F5EF] border border-[#C6A66B]/30 font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-1"
                       >
                         <Sparkles className="w-4 h-4 text-[#F4A340]" />
@@ -2155,6 +2141,7 @@ export default function ScholarsSathi() {
               </button>
               <button
                 type="button"
+                data-sound="special"
                 onClick={() => refreshAllData(currentUser, apiConfig)}
                 className="px-4 py-2 rounded-xl bg-[#642D42] hover:bg-[#522435] text-[#F8F5EF] border border-[#C6A66B]/30 font-bold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer"
               >
@@ -3221,6 +3208,7 @@ export default function ScholarsSathi() {
 
               <button
                 type="submit"
+                data-sound="special"
                 className="w-full py-3 rounded-xl bg-[#642D42] hover:bg-[#522435] text-[#F8F5EF] border border-[#C6A66B]/30 font-bold text-xs shadow-md transition cursor-pointer"
               >
                 Save Profile & Recalculate ML Scores

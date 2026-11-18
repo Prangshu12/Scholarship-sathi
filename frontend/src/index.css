@@ -53,3 +53,103 @@ html {
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
+
+/* Classy Gov-Tech + EdTech Repeating Animations */
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes float-reverse {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(0.85);
+    opacity: 0.8;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-slow-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes dash-flow {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes beam-glow {
+  0%, 100% {
+    opacity: 0.35;
+    filter: drop-shadow(0 0 2px rgba(53, 106, 230, 0.4));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px rgba(244, 163, 64, 0.85));
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 4s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: float-reverse 4.8s ease-in-out infinite;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 3s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 24s linear infinite;
+}
+
+.animate-spin-slow-reverse {
+  animation: spin-slow-reverse 18s linear infinite;
+}
+
+.animate-dash-flow {
+  animation: dash-flow 2s linear infinite;
+}
+
+.animate-beam-glow {
+  animation: beam-glow 3s ease-in-out infinite;
+}

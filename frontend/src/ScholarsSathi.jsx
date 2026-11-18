@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   GraduationCap,
   Search,
@@ -28,7 +28,9 @@ import {
   Sun,
   Moon,
   Building2,
-  Clock
+  Clock,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 // ============================================================================
@@ -413,7 +415,150 @@ function localRuleFallbackEngine(student, sch) {
 }
 
 // ============================================================================
-// 4. MAIN SCHOLARS SATHI REACT APPLICATION
+// 4. UI SOUND EFFECTS SYNTHESIZER ENGINE (Web Audio API - Zero External Files)
+// ============================================================================
+class UiSoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.enabled = true;
+  }
+
+  init() {
+    if (!this.ctx && typeof window !== 'undefined') {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        this.ctx = new AudioCtx();
+      }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+  }
+
+  play(type) {
+    if (!this.enabled) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+
+      if (type === 'click') {
+        // Subtle crisp tactile click (pop)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(650, t);
+        osc.frequency.exponentialRampToValueAtTime(220, t + 0.035);
+        gain.gain.setValueAtTime(0.06, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.04);
+      } else if (type === 'toggle') {
+        // Dual-tone toggle chime (light / dark mode / sound)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, t);
+        osc.frequency.exponentialRampToValueAtTime(880, t + 0.08);
+        gain.gain.setValueAtTime(0.07, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.085);
+      } else if (type === 'check') {
+        // Uplifting checkmark blip (C5 -> G5)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, t); // C5
+        osc.frequency.setValueAtTime(783.99, t + 0.05); // G5
+        gain.gain.setValueAtTime(0.08, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.14);
+      } else if (type === 'uncheck') {
+        // Soft descending blip
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, t); // D5
+        osc.frequency.setValueAtTime(392.00, t + 0.04); // G4
+        gain.gain.setValueAtTime(0.05, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.095);
+      } else if (type === 'modalOpen') {
+        // Gentle airy whoosh/expansion chime (F4 -> C5)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(349.23, t);
+        osc.frequency.exponentialRampToValueAtTime(523.25, t + 0.11);
+        gain.gain.setValueAtTime(0.05, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.14);
+      } else if (type === 'modalClose') {
+        // Soft receding pop
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, t);
+        osc.frequency.exponentialRampToValueAtTime(260, t + 0.06);
+        gain.gain.setValueAtTime(0.04, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.08);
+      } else if (type === 'success') {
+        // Uplifting 3-note victory arpeggio (C5 -> E5 -> G5)
+        [523.25, 659.25, 783.99].forEach((freq, idx) => {
+          const noteTime = t + idx * 0.06;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, noteTime);
+          gain.gain.setValueAtTime(0.06, noteTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, noteTime + 0.15);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(noteTime);
+          osc.stop(noteTime + 0.16);
+        });
+      } else if (type === 'nav') {
+        // Subtle soft tap for page navigation
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(680, t);
+        osc.frequency.exponentialRampToValueAtTime(340, t + 0.035);
+        gain.gain.setValueAtTime(0.05, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.045);
+      }
+    } catch {
+      // AudioContext policy or unsupported browser - fail silently
+    }
+  }
+}
+
+const soundFx = new UiSoundEngine();
+
+// ============================================================================
+// 5. MAIN SCHOLARS SATHI REACT APPLICATION
 // ============================================================================
 export default function ScholarsSathi() {
   // Theme State: Dark Mode (Requirement 1)
@@ -442,11 +587,68 @@ export default function ScholarsSathi() {
     }
   }, [darkMode]);
 
-  const toggleDarkMode = () => setDarkMode((prev) => !prev);
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => !prev);
+    soundFx.play('toggle');
+  };
+
+  // Sound Effects State (Mute / Unmute Toggle)
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ss_sound');
+      return saved !== 'false';
+    } catch {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    soundFx.enabled = soundEnabled;
+    try {
+      localStorage.setItem('ss_sound', soundEnabled ? 'true' : 'false');
+    } catch {
+      // Ignore
+    }
+  }, [soundEnabled]);
+
+  const toggleSound = () => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    if (next) soundFx.play('toggle');
+  };
 
   // View & Responsive Navigation State
   const [activeView, setActiveView] = useState('home'); // 'home' | 'dashboard'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Auto-hide navigation on scroll-down, reveal on scroll-up or top hover
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY <= 25) {
+        // At the top of the page: always visible
+        setIsHeaderVisible(true);
+      } else if (currentScrollY < lastScrollY.current - 8) {
+        // Scrolling up: reveal navbar
+        setIsHeaderVisible(true);
+      } else if (currentScrollY > lastScrollY.current + 8) {
+        // Scrolling down: hide navbar
+        setIsHeaderVisible(false);
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const showNavbar = isHeaderVisible || isHovered;
 
   // API Configuration State (Backend + ML Model Service)
   const [apiConfig, setApiConfig] = useState(() => {
@@ -674,6 +876,7 @@ export default function ScholarsSathi() {
       course: quickCheck.course
     };
     setCurrentUser(updatedUser);
+    soundFx.play('success');
     setActiveView('dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     refreshAllData(updatedUser, apiConfig);
@@ -710,6 +913,7 @@ export default function ScholarsSathi() {
     }
 
     setCurrentUser(loggedInUser);
+    soundFx.play('success');
     setAuthModal({ open: false, tab: 'login' });
     setActiveView('dashboard');
     refreshAllData(loggedInUser, apiConfig);
@@ -741,6 +945,7 @@ export default function ScholarsSathi() {
     }
 
     setCurrentUser(registeredUser);
+    soundFx.play('success');
     setAuthModal({ open: false, tab: 'login' });
     setActiveView('dashboard');
     refreshAllData(registeredUser, apiConfig);
@@ -753,6 +958,7 @@ export default function ScholarsSathi() {
       // Ignore
     }
     setCurrentUser((prev) => ({ ...prev, isAuthenticated: false }));
+    soundFx.play('toggle');
     setActiveView('home');
   };
 
@@ -760,6 +966,7 @@ export default function ScholarsSathi() {
   // HANDLERS: PROFILE EDITOR & API CONFIGURATION
   // ==========================================================================
   const openEditProfileModal = () => {
+    soundFx.play('modalOpen');
     setProfileForm({
       ...currentUser,
       nationality: currentUser.nationality || 'Indian'
@@ -813,6 +1020,7 @@ export default function ScholarsSathi() {
   // HANDLERS: SCHOLARSHIP DETAILS MODAL & APPLICATION TRACKING
   // ==========================================================================
   const openScholarshipDetail = async (sch) => {
+    soundFx.play('modalOpen');
     setDetailModal({ open: true, scholarship: sch, mlDetail: null, loading: true });
 
     const res = await apiRequest(
@@ -828,6 +1036,7 @@ export default function ScholarsSathi() {
   };
 
   const handleStatusChange = (scholarshipId, status) => {
+    soundFx.play(status ? 'success' : 'click');
     const next = { ...trackedApplications };
     if (status) next[scholarshipId] = status;
     else delete next[scholarshipId];
@@ -844,7 +1053,9 @@ export default function ScholarsSathi() {
   };
 
   const toggleChecklistItem = (id) => {
-    const next = { ...checklistState, [id]: !checklistState[id] };
+    const isNowChecked = !checklistState[id];
+    soundFx.play(isNowChecked ? 'check' : 'uncheck');
+    const next = { ...checklistState, [id]: isNowChecked };
     setChecklistState(next);
     try {
       localStorage.setItem('ss_checklist', JSON.stringify(next));
@@ -940,53 +1151,70 @@ export default function ScholarsSathi() {
   // ==========================================================================
   return (
     <div className="min-h-screen bg-[#F7F9FC] dark:bg-[#0B132B] text-[#263449] dark:text-[#E2E8F0] font-sans antialiased flex flex-col selection:bg-[#356AE6] selection:text-white transition-colors duration-200">
+      {/* Top Edge Hover Trigger Zone (Active when navbar is hidden) */}
+      <div
+        onMouseEnter={() => setIsHovered(true)}
+        className={`fixed top-0 inset-x-0 h-3 z-40 ${
+          showNavbar ? 'pointer-events-none' : 'pointer-events-auto'
+        }`}
+      />
+
       {/* =================================================================== */}
-      {/* TOP GOVERNMENT-TECH & EDTECH NAVIGATION BAR                         */}
+      {/* MINIMALIST DYNAMIC AUTO-HIDE SCROLLING HOTBAR / NAVBAR              */}
+      {/* Minimizes completely on scroll down, leaving only a peek notch      */}
+      {/* Returns automatically when hovered back or scrolled up              */}
       {/* =================================================================== */}
-      <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#0E1726]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-[#1F324E] shadow-[0_1px_3px_rgba(20,43,74,0.04)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-17 flex items-center justify-between gap-4">
-          {/* Brand Logo & GovTech Emblem */}
-          <div className="flex items-center gap-3">
+      <header
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`sticky top-0 z-40 w-full h-15 sm:h-16 transition-transform duration-300 ease-in-out ${
+          showNavbar ? 'translate-y-0' : '-translate-y-full'
+        } bg-white/95 dark:bg-[#0B132B]/95 backdrop-blur-xl border-b border-slate-200 dark:border-[#1F324E] shadow-[0_2px_10px_rgba(0,0,0,0.06)]`}
+      >
+        <div
+          className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between gap-4 sm:gap-6 transition-opacity duration-200 ${
+            showNavbar ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        >
+          {/* Brand Logo - Guaranteed single-line & resilient */}
+          <div className="flex items-center shrink-0">
             <button
               type="button"
               onClick={() => {
+                soundFx.play('nav');
                 setActiveView('home');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="flex items-center gap-3 text-left cursor-pointer group"
+              className="flex items-center gap-2.5 text-left cursor-pointer group focus:outline-none"
             >
-              <div className="w-10 h-10 rounded-xl bg-[#142B4A] dark:bg-[#356AE6] flex items-center justify-center text-white shadow-xs group-hover:bg-[#356AE6] dark:group-hover:bg-[#2857C7] transition-colors duration-200">
-                <GraduationCap className="w-6 h-6 text-[#F4A340] group-hover:text-white transition-colors" />
+              <div className="w-8.5 h-8.5 sm:w-9.5 sm:h-9.5 rounded-xl bg-[#142B4A] dark:bg-[#356AE6] flex items-center justify-center text-white shadow-xs group-hover:bg-[#356AE6] dark:group-hover:bg-[#2857C7] transition-all duration-200">
+                <GraduationCap className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#F4A340] group-hover:text-white transition-colors" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-extrabold tracking-tight text-[#142B4A] dark:text-white">
-                    Scholarship <span className="text-[#356AE6]">Sathi</span>
-                  </span>
-                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#142B4A]/5 dark:bg-white/10 text-[#142B4A] dark:text-slate-300 border border-slate-200 dark:border-white/10">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#F4A340]"></span>
-                    Gov-Tech + AI
-                  </span>
-                </div>
-                <p className="hidden md:block text-[11px] font-medium text-slate-500 dark:text-slate-400 -mt-0.5">
-                  National Scholarship Portal & Direct Benefit Transfer Portal
-                </p>
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <span className="text-base sm:text-lg font-extrabold tracking-tight text-[#142B4A] dark:text-white">
+                  Scholarship <span className="text-[#356AE6]">Sathi</span>
+                </span>
+                <span className="hidden sm:inline-flex items-center gap-1 font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#142B4A]/5 dark:bg-white/10 text-[#142B4A] dark:text-slate-300 border border-slate-200 dark:border-white/10 text-[9px]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#F4A340]"></span>
+                  Gov-Tech
+                </span>
               </div>
             </button>
           </div>
 
-          {/* Center Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 text-sm font-semibold">
+          {/* Center Navigation Links - Spaced, clean, minimalist */}
+          <nav className="hidden md:flex items-center gap-7 sm:gap-8 text-sm font-semibold">
             <button
               type="button"
               onClick={() => {
+                soundFx.play('nav');
                 setActiveView('home');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`px-3 py-2 rounded-lg transition-colors cursor-pointer ${
+              className={`transition-colors cursor-pointer py-1 relative ${
                 activeView === 'home'
-                  ? 'text-[#356AE6] bg-[#356AE6]/10 font-bold dark:bg-[#356AE6]/20'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#142238]'
+                  ? 'text-[#356AE6] font-bold after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#356AE6] after:rounded-full'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white'
               }`}
             >
               Overview
@@ -994,18 +1222,19 @@ export default function ScholarsSathi() {
             <button
               type="button"
               onClick={() => {
+                soundFx.play('nav');
                 setActiveView('dashboard');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 cursor-pointer ${
+              className={`transition-colors flex items-center gap-1.5 cursor-pointer py-1 relative ${
                 activeView === 'dashboard'
-                  ? 'text-[#356AE6] bg-[#356AE6]/10 font-bold dark:bg-[#356AE6]/20'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#142238]'
+                  ? 'text-[#356AE6] font-bold after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#356AE6] after:rounded-full'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white'
               }`}
             >
               <span>Scholarship Explorer</span>
               <span className="bg-[#F4A340]/15 dark:bg-[#F4A340]/25 text-[#D97706] dark:text-[#F4A340] text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
-                {enrichedScholarships.length || DEFAULT_SCHOLARSHIPS.length} Live
+                {enrichedScholarships.length || DEFAULT_SCHOLARSHIPS.length}
               </span>
             </button>
             <button
@@ -1018,7 +1247,7 @@ export default function ScholarsSathi() {
                     ?.scrollIntoView({ behavior: 'smooth' });
                 }, 80);
               }}
-              className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#142238] transition-colors cursor-pointer"
+              className="text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white transition-colors cursor-pointer py-1"
             >
               DBT Checklist
             </button>
@@ -1031,21 +1260,36 @@ export default function ScholarsSathi() {
                 });
                 setApiConfigModalOpen(true);
               }}
-              className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#142238] flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-[#142B4A] dark:hover:text-white flex items-center gap-1 transition-colors cursor-pointer py-1"
               title="Configure Backend & ML Model API URLs"
             >
               <Plug className="w-3.5 h-3.5 text-[#356AE6]" />
-              <span>API Integrations</span>
+              <span>API Config</span>
             </button>
           </nav>
 
-          {/* Right Controls: Dark Mode Toggle, Auth & Profile */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Dark Mode Toggle Button (Requirement 1) */}
+          {/* Right Controls: Dark Mode Toggle, Auth & Profile - Neatly Aligned */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* Sound Effects Mute / Unmute Toggle */}
+            <button
+              type="button"
+              onClick={toggleSound}
+              className="w-9 h-9 p-2 rounded-xl border border-slate-200 dark:border-[#1F324E] bg-white dark:bg-[#142238] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1B2B47] transition-all cursor-pointer shadow-xs flex items-center justify-center"
+              aria-label={soundEnabled ? 'Mute sound effects' : 'Enable sound effects'}
+              title={soundEnabled ? 'Mute sound effects' : 'Enable sound effects'}
+            >
+              {soundEnabled ? (
+                <Volume2 className="w-4 h-4 text-[#356AE6]" />
+              ) : (
+                <VolumeX className="w-4 h-4 text-slate-400" />
+              )}
+            </button>
+
+            {/* Dark Mode Toggle Button */}
             <button
               type="button"
               onClick={toggleDarkMode}
-              className="p-2.5 rounded-xl border border-slate-200 dark:border-[#1F324E] bg-white dark:bg-[#142238] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1B2B47] transition-all cursor-pointer shadow-xs"
+              className="w-9 h-9 p-2 rounded-xl border border-slate-200 dark:border-[#1F324E] bg-white dark:bg-[#142238] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1B2B47] transition-all cursor-pointer shadow-xs flex items-center justify-center"
               aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
@@ -1056,37 +1300,21 @@ export default function ScholarsSathi() {
               )}
             </button>
 
-            {/* Back Button in Header for Instant Quick Return */}
-            {activeView === 'dashboard' && (
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveView('home');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-[#142B4A] dark:text-slate-200 bg-slate-100 dark:bg-[#142238] hover:bg-slate-200 dark:hover:bg-[#1B2B47] border border-slate-200 dark:border-[#1F324E] transition cursor-pointer"
-                title="Back to Overview / Home"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 text-[#356AE6]" />
-                <span>Overview</span>
-              </button>
-            )}
-
             {/* Auth Controls */}
             {currentUser.isAuthenticated ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={openEditProfileModal}
-                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#356AE6]/10 dark:bg-[#356AE6]/20 text-[#356AE6] dark:text-blue-300 font-bold text-xs border border-[#356AE6]/30 hover:bg-[#356AE6]/20 transition cursor-pointer"
+                  className="px-3.5 py-1.5 sm:py-2 text-xs flex items-center gap-1.5 rounded-xl bg-[#356AE6]/10 dark:bg-[#356AE6]/20 text-[#356AE6] dark:text-blue-300 font-bold border border-[#356AE6]/30 hover:bg-[#356AE6]/20 transition-all cursor-pointer"
                 >
                   <User className="w-3.5 h-3.5" />
-                  <span className="max-w-[120px] truncate">{currentUser.name}</span>
+                  <span className="max-w-[110px] truncate">{currentUser.name}</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="px-3 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition cursor-pointer"
+                  className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-all cursor-pointer"
                 >
                   Logout
                 </button>
@@ -1095,15 +1323,15 @@ export default function ScholarsSathi() {
               <div className="hidden sm:flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setAuthModal({ open: true, tab: 'login' })}
-                  className="px-3.5 py-2 text-xs font-bold text-[#142B4A] dark:text-slate-200 hover:text-[#356AE6] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#142238] rounded-xl transition cursor-pointer"
+                  onClick={() => (() => { soundFx.play('modalOpen'); setAuthModal({ open: true, tab: 'login' }); })()}
+                  className="px-3.5 py-2 text-xs font-bold text-[#142B4A] dark:text-slate-200 hover:text-[#356AE6] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#142238] rounded-xl transition-all cursor-pointer"
                 >
                   Sign In
                 </button>
                 <button
                   type="button"
-                  onClick={() => setAuthModal({ open: true, tab: 'register' })}
-                  className="px-4 py-2 text-xs font-bold text-white bg-[#356AE6] hover:bg-[#2857C7] rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                  onClick={() => (() => { soundFx.play('modalOpen'); setAuthModal({ open: true, tab: 'register' }); })()}
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#356AE6] hover:bg-[#2857C7] rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
                   <span>Register</span>
@@ -1115,7 +1343,7 @@ export default function ScholarsSathi() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#142238] border border-slate-200 dark:border-[#1F324E]"
+              className="md:hidden p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#142238] border border-slate-200 dark:border-[#1F324E]"
               aria-label="Toggle Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -1123,9 +1351,22 @@ export default function ScholarsSathi() {
           </div>
         </div>
 
+        {/* Minimalist Peek Notch: ONLY this little part remains without contents when scrolling down */}
+        <div
+          onClick={() => setIsHovered(true)}
+          className={`absolute left-1/2 -translate-x-1/2 top-full transition-all duration-300 pointer-events-auto cursor-pointer flex flex-col items-center ${
+            showNavbar
+              ? 'opacity-0 pointer-events-none -translate-y-1'
+              : 'opacity-100 translate-y-0'
+          }`}
+          title="Hover or scroll up to expand navigation"
+        >
+          <div className="w-16 h-1.5 sm:w-20 sm:h-2 rounded-b-full bg-[#356AE6] dark:bg-[#356AE6] shadow-md hover:w-28 hover:h-2.5 hover:bg-[#F4A340] transition-all duration-200" />
+        </div>
+
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-white dark:bg-[#0E1726] border-t border-slate-200 dark:border-[#1F324E] px-4 py-4 space-y-3 shadow-xl">
+          <div className="md:hidden bg-white dark:bg-[#0B132B] border-t border-slate-200 dark:border-[#1F324E] px-4 py-4 space-y-3 shadow-xl">
             <div className="flex flex-col space-y-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
               <button
                 type="button"
@@ -1133,7 +1374,7 @@ export default function ScholarsSathi() {
                   setActiveView('home');
                   setMobileMenuOpen(false);
                 }}
-                className={`text-left py-2.5 px-3 rounded-lg flex items-center gap-2 ${
+                className={`text-left py-2 px-3 rounded-lg flex items-center gap-2 ${
                   activeView === 'home'
                     ? 'bg-[#356AE6]/10 text-[#356AE6] font-bold'
                     : 'hover:bg-slate-50 dark:hover:bg-[#142238]'
@@ -1147,7 +1388,7 @@ export default function ScholarsSathi() {
                   setActiveView('dashboard');
                   setMobileMenuOpen(false);
                 }}
-                className={`text-left py-2.5 px-3 rounded-lg flex items-center justify-between ${
+                className={`text-left py-2 px-3 rounded-lg flex items-center justify-between ${
                   activeView === 'dashboard'
                     ? 'bg-[#356AE6]/10 text-[#356AE6] font-bold'
                     : 'hover:bg-slate-50 dark:hover:bg-[#142238]'
@@ -1169,7 +1410,7 @@ export default function ScholarsSathi() {
                       ?.scrollIntoView({ behavior: 'smooth' });
                   }, 100);
                 }}
-                className="text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-[#142238]"
+                className="text-left py-2 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-[#142238]"
               >
                 DBT Document Checklist
               </button>
@@ -1183,7 +1424,7 @@ export default function ScholarsSathi() {
                   setApiConfigModalOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className="text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-[#142238] text-[#356AE6] flex items-center gap-2"
+                className="text-left py-2 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-[#142238] text-[#356AE6] flex items-center gap-2"
               >
                 <Plug className="w-4 h-4" />
                 <span>Backend & ML API Config</span>
@@ -1219,7 +1460,7 @@ export default function ScholarsSathi() {
                   <button
                     type="button"
                     onClick={() => {
-                      setAuthModal({ open: true, tab: 'login' });
+                      (() => { soundFx.play('modalOpen'); setAuthModal({ open: true, tab: 'login' }); })();
                       setMobileMenuOpen(false);
                     }}
                     className="py-2.5 rounded-xl border border-slate-300 dark:border-[#1F324E] text-[#142B4A] dark:text-slate-200 text-xs font-bold"
@@ -1229,7 +1470,7 @@ export default function ScholarsSathi() {
                   <button
                     type="button"
                     onClick={() => {
-                      setAuthModal({ open: true, tab: 'register' });
+                      (() => { soundFx.play('modalOpen'); setAuthModal({ open: true, tab: 'register' }); })();
                       setMobileMenuOpen(false);
                     }}
                     className="py-2.5 rounded-xl bg-[#356AE6] text-white text-xs font-bold"
@@ -1261,10 +1502,10 @@ export default function ScholarsSathi() {
             {/* Ambient Lighting */}
             <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#356AE6]/15 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20 relative z-10">
-              <div className="grid lg:grid-cols-12 gap-10 items-center">
-                {/* Left Hero Copy & Mission */}
-                <div className="lg:col-span-7 space-y-6">
+            <div className="max-w-[1536px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-12 lg:py-18 relative z-10">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-10 items-center justify-between">
+                {/* Leftmost Hero Copy & Mission */}
+                <div className="lg:col-span-5 xl:col-span-5 space-y-6 text-left">
                   <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-slate-200 text-xs font-semibold backdrop-blur-xs">
                     <span className="w-2 h-2 rounded-full bg-[#F4A340] animate-pulse"></span>
                     <span className="text-[#F4A340] font-bold">Government-Tech Initiative</span>
@@ -1299,7 +1540,7 @@ export default function ScholarsSathi() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setAuthModal({ open: true, tab: 'register' })}
+                      onClick={() => (() => { soundFx.play('modalOpen'); setAuthModal({ open: true, tab: 'register' }); })()}
                       className="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-sm transition cursor-pointer flex items-center gap-2"
                     >
                       <UserCheck className="w-4 h-4 text-[#F4A340]" />
@@ -1324,9 +1565,73 @@ export default function ScholarsSathi() {
                   </div>
                 </div>
 
-                {/* Right Hero Card: Instant Eligibility Check */}
-                <div className="lg:col-span-5">
-                  <div className="bg-white dark:bg-[#142238] text-[#263449] dark:text-slate-100 rounded-2xl p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-[#1F324E]">
+                {/* ================================================================= */}
+                {/* CLASSY REPEATING ANIMATION: AI CONDUIT & DBT VERIFICATION STREAM  */}
+                {/* ================================================================= */}
+                <div className="hidden lg:flex lg:col-span-3 xl:col-span-3 flex-col items-center justify-center relative py-2 select-none pointer-events-none">
+                  {/* Top Floating Badge */}
+                  <div className="animate-float-slow mb-3 z-10">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 dark:bg-white/5 border border-white/20 backdrop-blur-md shadow-lg text-[11px] font-bold text-white tracking-wide">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>100% DBT Verified</span>
+                    </div>
+                  </div>
+
+                  {/* Upper Animated Data Flow Beam */}
+                  <svg className="w-48 h-6 overflow-visible mb-1" viewBox="0 0 180 24">
+                    <defs>
+                      <linearGradient id="beamGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#356AE6" stopOpacity="0.1" />
+                        <stop offset="50%" stopColor="#F4A340" stopOpacity="0.9" />
+                        <stop offset="100%" stopColor="#356AE6" stopOpacity="0.1" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M 0,12 Q 90,0 180,12" fill="none" stroke="url(#beamGrad1)" strokeWidth="2" strokeDasharray="6 6" className="animate-dash-flow" />
+                    <circle cx="90" cy="6" r="3" fill="#F4A340" className="animate-ping opacity-75" />
+                  </svg>
+
+                  {/* Central Orbital Matching Core */}
+                  <div className="relative w-36 h-36 flex items-center justify-center my-1">
+                    {/* Outer dashed spinning ring */}
+                    <div className="w-36 h-36 rounded-full border border-dashed border-[#356AE6]/40 animate-spin-slow absolute inset-0 m-auto" />
+                    
+                    {/* Middle reverse dotted spinning ring */}
+                    <div className="w-28 h-28 rounded-full border border-dotted border-[#F4A340]/50 animate-spin-slow-reverse absolute inset-0 m-auto" />
+                    
+                    {/* Ambient pulsing aura */}
+                    <div className="w-20 h-20 rounded-full bg-[#356AE6]/25 blur-xl animate-pulse-ring absolute inset-0 m-auto" />
+
+                    {/* Core Shield Emblem with Subtle Pulse */}
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#142B4A] to-[#1E3A66] border border-[#356AE6]/70 shadow-2xl flex items-center justify-center relative z-10 transition-transform duration-300">
+                      <Sparkles className="w-7 h-7 text-[#F4A340] animate-beam-glow" />
+                    </div>
+                  </div>
+
+                  {/* Lower Animated Data Flow Beam */}
+                  <svg className="w-48 h-6 overflow-visible mt-1" viewBox="0 0 180 24">
+                    <defs>
+                      <linearGradient id="beamGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#F4A340" stopOpacity="0.1" />
+                        <stop offset="50%" stopColor="#356AE6" stopOpacity="0.9" />
+                        <stop offset="100%" stopColor="#F4A340" stopOpacity="0.1" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M 0,12 Q 90,24 180,12" fill="none" stroke="url(#beamGrad2)" strokeWidth="2" strokeDasharray="6 6" className="animate-dash-flow" />
+                    <circle cx="90" cy="18" r="3" fill="#356AE6" className="animate-ping opacity-75" />
+                  </svg>
+
+                  {/* Bottom Floating Badge */}
+                  <div className="animate-float-reverse mt-3 z-10">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 dark:bg-white/5 border border-white/20 backdrop-blur-md shadow-lg text-[11px] font-bold text-white tracking-wide">
+                      <Cpu className="w-3.5 h-3.5 text-[#F4A340] shrink-0" />
+                      <span>Live AI Matching Engine</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rightmost Hero Card: Instant Eligibility Check */}
+                <div className="lg:col-span-4 xl:col-span-4 w-full flex justify-end">
+                  <div className="w-full max-w-md ml-auto bg-white dark:bg-[#142238] text-[#263449] dark:text-slate-100 rounded-2xl p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-[#1F324E]">
                     <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-100 dark:border-[#1F324E]">
                       <div>
                         <div className="flex items-center gap-1.5 text-xs font-bold text-[#356AE6] uppercase tracking-wider">
@@ -1980,7 +2285,7 @@ export default function ScholarsSathi() {
                 <button
                   key={cat.id}
                   type="button"
-                  onClick={() => setCategoryQuickFilter(cat.id)}
+                  onClick={() => { soundFx.play('click'); setCategoryQuickFilter(cat.id); }}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                     active
                       ? 'bg-[#356AE6] text-white shadow-xs'
@@ -2235,7 +2540,7 @@ export default function ScholarsSathi() {
       {detailModal.open && detailModal.scholarship && (
         <div
           className="fixed inset-0 z-50 bg-[#142B4A]/60 dark:bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
-          onClick={() => setDetailModal({ ...detailModal, open: false })}
+          onClick={() => { soundFx.play('modalClose'); setDetailModal({ ...detailModal, open: false }); }}
         >
           <div
             className="bg-white dark:bg-[#142238] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 dark:border-[#1F324E] p-6 sm:p-8 relative my-auto text-[#263449] dark:text-slate-100"
@@ -2245,7 +2550,7 @@ export default function ScholarsSathi() {
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-[#1F324E]">
               <button
                 type="button"
-                onClick={() => setDetailModal({ ...detailModal, open: false })}
+                onClick={() => { soundFx.play('modalClose'); setDetailModal({ ...detailModal, open: false }); }}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[#142B4A] dark:text-slate-200 bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] transition cursor-pointer group"
               >
                 <ArrowLeft className="w-4 h-4 text-[#356AE6] transition-transform group-hover:-translate-x-1" />
@@ -2254,7 +2559,7 @@ export default function ScholarsSathi() {
 
               <button
                 type="button"
-                onClick={() => setDetailModal({ ...detailModal, open: false })}
+                onClick={() => { soundFx.play('modalClose'); setDetailModal({ ...detailModal, open: false }); }}
                 className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
                 aria-label="Close"
               >
@@ -2415,7 +2720,7 @@ export default function ScholarsSathi() {
       {authModal.open && (
         <div
           className="fixed inset-0 z-50 bg-[#142B4A]/60 dark:bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
-          onClick={() => setAuthModal({ ...authModal, open: false })}
+          onClick={() => { soundFx.play('modalClose'); setAuthModal({ ...authModal, open: false }); }}
         >
           <div
             className="bg-white dark:bg-[#142238] rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-[#1F324E] p-6 sm:p-8 relative my-auto text-[#263449] dark:text-slate-100"
@@ -2423,7 +2728,7 @@ export default function ScholarsSathi() {
           >
             <button
               type="button"
-              onClick={() => setAuthModal({ ...authModal, open: false })}
+              onClick={() => { soundFx.play('modalClose'); setAuthModal({ ...authModal, open: false }); }}
               className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
             >
               <X className="w-4 h-4" />
@@ -2433,7 +2738,7 @@ export default function ScholarsSathi() {
             <div className="flex gap-1.5 p-1 bg-slate-100 dark:bg-[#0F1A2E] rounded-xl mb-6 w-fit border border-slate-200 dark:border-[#1F324E]">
               <button
                 type="button"
-                onClick={() => setAuthModal({ open: true, tab: 'login' })}
+                onClick={() => (() => { soundFx.play('modalOpen'); setAuthModal({ open: true, tab: 'login' }); })()}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                   authModal.tab === 'login'
                     ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
@@ -2444,7 +2749,7 @@ export default function ScholarsSathi() {
               </button>
               <button
                 type="button"
-                onClick={() => setAuthModal({ open: true, tab: 'register' })}
+                onClick={() => (() => { soundFx.play('modalOpen'); setAuthModal({ open: true, tab: 'register' }); })()}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                   authModal.tab === 'register'
                     ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
@@ -2741,7 +3046,7 @@ export default function ScholarsSathi() {
       {profileModalOpen && (
         <div
           className="fixed inset-0 z-50 bg-[#142B4A]/60 dark:bg-black/70 backdrop-blur-xs flex items-center justify-center p-4"
-          onClick={() => setProfileModalOpen(false)}
+          onClick={() => { soundFx.play('modalClose'); setProfileModalOpen(false); }}
         >
           <div
             className="bg-white dark:bg-[#142238] rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-[#1F324E] p-6 sm:p-8 relative text-[#263449] dark:text-slate-100"
@@ -2749,7 +3054,7 @@ export default function ScholarsSathi() {
           >
             <button
               type="button"
-              onClick={() => setProfileModalOpen(false)}
+              onClick={() => { soundFx.play('modalClose'); setProfileModalOpen(false); }}
               className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
             >
               <X className="w-4 h-4" />
@@ -2931,7 +3236,7 @@ export default function ScholarsSathi() {
       {apiConfigModalOpen && (
         <div
           className="fixed inset-0 z-50 bg-[#142B4A]/60 dark:bg-black/70 backdrop-blur-xs flex items-center justify-center p-4"
-          onClick={() => setApiConfigModalOpen(false)}
+          onClick={() => { soundFx.play('modalClose'); setApiConfigModalOpen(false); }}
         >
           <div
             className="bg-white dark:bg-[#142238] rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 dark:border-[#1F324E] p-6 sm:p-8 relative text-[#263449] dark:text-slate-100"
@@ -2939,7 +3244,7 @@ export default function ScholarsSathi() {
           >
             <button
               type="button"
-              onClick={() => setApiConfigModalOpen(false)}
+              onClick={() => { soundFx.play('modalClose'); setApiConfigModalOpen(false); }}
               className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
             >
               <X className="w-4 h-4" />

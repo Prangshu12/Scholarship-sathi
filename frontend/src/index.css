@@ -3,34 +3,39 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
+  --font-serif: 'Playfair Display', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --color-primary-navy: #142B4A;
-  --color-royal-blue: #356AE6;
-  --color-royal-blue-hover: #2957C4;
-  --color-warm-saffron: #F4A340;
-  --color-soft-bg: #F7F9FC;
-  --color-dark-slate: #263449;
-  --color-dark-bg: #0B132B;
-  --color-dark-surface: #142238;
-  --color-dark-surface-elevated: #1B2B47;
-  --color-dark-border: #1F324E;
+
+  --color-midnight-navy: #101B2D;
+  --color-royal-burgundy: #642D42;
+  --color-royal-burgundy-hover: #522435;
+  --color-champagne-gold: #C6A66B;
+  --color-champagne-gold-light: #DFCA9B;
+  --color-warm-ivory: #F8F5EF;
+  --color-soft-cream: #EEE7DA;
+  --color-muted-slate: #647184;
+  --color-charcoal-black: #25282D;
+
+  --color-dark-surface: #172439;
+  --color-dark-surface-elevated: #1F304A;
+  --color-dark-border: #263852;
 }
 
-/* Custom scrollbar and subtle transitions */
+/* Editorial Academic Typography & Smooth Transitions */
 html {
   scroll-behavior: smooth;
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 ::selection {
-  background-color: #356AE6;
-  color: #ffffff;
+  background-color: #642D42;
+  color: #F8F5EF;
 }
 
-/* Custom subtle scrollbar */
+/* Refined Subtle Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -38,29 +43,29 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #C6A66B55;
   border-radius: 9999px;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #C6A66B33;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #C6A66B99;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #C6A66B66;
 }
 
-/* Classy Gov-Tech + EdTech Repeating Animations */
+/* Luxury Editorial & Academic Subtle Animations */
 @keyframes float-slow {
   0%, 100% {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-8px);
+    transform: translateY(-6px);
   }
 }
 
@@ -69,22 +74,22 @@ html {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
 }
 
 @keyframes pulse-ring {
   0% {
-    transform: scale(0.85);
-    opacity: 0.8;
+    transform: scale(0.88);
+    opacity: 0.6;
   }
   50% {
-    transform: scale(1.15);
-    opacity: 0.2;
+    transform: scale(1.12);
+    opacity: 0.15;
   }
   100% {
-    transform: scale(0.85);
-    opacity: 0.8;
+    transform: scale(0.88);
+    opacity: 0.6;
   }
 }
 
@@ -117,39 +122,39 @@ html {
 
 @keyframes beam-glow {
   0%, 100% {
-    opacity: 0.35;
-    filter: drop-shadow(0 0 2px rgba(53, 106, 230, 0.4));
+    opacity: 0.45;
+    filter: drop-shadow(0 0 2px rgba(198, 166, 107, 0.4));
   }
   50% {
     opacity: 1;
-    filter: drop-shadow(0 0 10px rgba(244, 163, 64, 0.85));
+    filter: drop-shadow(0 0 8px rgba(198, 166, 107, 0.85));
   }
 }
 
 .animate-float-slow {
-  animation: float-slow 4s ease-in-out infinite;
+  animation: float-slow 4.5s ease-in-out infinite;
 }
 
 .animate-float-reverse {
-  animation: float-reverse 4.8s ease-in-out infinite;
+  animation: float-reverse 5s ease-in-out infinite;
 }
 
 .animate-pulse-ring {
-  animation: pulse-ring 3s ease-in-out infinite;
+  animation: pulse-ring 3.5s ease-in-out infinite;
 }
 
 .animate-spin-slow {
-  animation: spin-slow 24s linear infinite;
+  animation: spin-slow 28s linear infinite;
 }
 
 .animate-spin-slow-reverse {
-  animation: spin-slow-reverse 18s linear infinite;
+  animation: spin-slow-reverse 22s linear infinite;
 }
 
 .animate-dash-flow {
-  animation: dash-flow 2s linear infinite;
+  animation: dash-flow 2.2s linear infinite;
 }
 
 .animate-beam-glow {
-  animation: beam-glow 3s ease-in-out infinite;
+  animation: beam-glow 3.5s ease-in-out infinite;
 }

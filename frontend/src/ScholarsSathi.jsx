@@ -1150,7 +1150,7 @@ export default function ScholarsSathi() {
   // Background: #F7F9FC / Dark: #0B132B | Text: #263449 / Dark: #E2E8F0
   // ==========================================================================
   return (
-    <div className="min-h-screen bg-[#F7F9FC] dark:bg-[#0B132B] text-[#263449] dark:text-[#E2E8F0] font-sans antialiased flex flex-col selection:bg-[#356AE6] selection:text-white transition-colors duration-200">
+    <div className="min-h-screen bg-[#F8F5EF] dark:bg-[#101B2D] text-[#25282D] dark:text-[#F8F5EF] font-sans antialiased flex flex-col selection:bg-[#356AE6] selection:text-white transition-colors duration-200">
       {/* Top Edge Hover Trigger Zone (Active when navbar is hidden) */}
       <div
         onMouseEnter={() => setIsHovered(true)}
@@ -1169,7 +1169,7 @@ export default function ScholarsSathi() {
         onMouseLeave={() => setIsHovered(false)}
         className={`sticky top-0 z-40 w-full h-15 sm:h-16 transition-transform duration-300 ease-in-out ${
           showNavbar ? 'translate-y-0' : '-translate-y-full'
-        } bg-white/95 dark:bg-[#0B132B]/95 backdrop-blur-xl border-b border-slate-200 dark:border-[#1F324E] shadow-[0_2px_10px_rgba(0,0,0,0.06)]`}
+        } bg-[#F8F5EF]/95 dark:bg-[#101B2D]/95 backdrop-blur-xl border-b border-[#C6A66B]/25 dark:border-[#263852] shadow-[0_2px_10px_rgba(0,0,0,0.06)]`}
       >
         <div
           className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between gap-4 sm:gap-6 transition-opacity duration-200 ${
@@ -1187,15 +1187,15 @@ export default function ScholarsSathi() {
               }}
               className="flex items-center gap-2.5 text-left cursor-pointer group focus:outline-none"
             >
-              <div className="w-8.5 h-8.5 sm:w-9.5 sm:h-9.5 rounded-xl bg-[#142B4A] dark:bg-[#356AE6] flex items-center justify-center text-white shadow-xs group-hover:bg-[#356AE6] dark:group-hover:bg-[#2857C7] transition-all duration-200">
-                <GraduationCap className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#F4A340] group-hover:text-white transition-colors" />
+              <div className="w-8.5 h-8.5 sm:w-9.5 sm:h-9.5 rounded-xl bg-[#101B2D] dark:bg-[#1F304A] border border-[#C6A66B]/40 flex items-center justify-center text-white shadow-xs group-hover:bg-[#642D42] dark:group-hover:bg-[#642D42] transition-all duration-200">
+                <GraduationCap className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#C6A66B] group-hover:text-[#F8F5EF] transition-colors" />
               </div>
               <div className="flex items-center gap-2 whitespace-nowrap">
-                <span className="text-base sm:text-lg font-extrabold tracking-tight text-[#142B4A] dark:text-white">
-                  Scholarship <span className="text-[#356AE6]">Sathi</span>
+                <span className="font-serif text-base sm:text-lg font-bold tracking-tight text-[#101B2D] dark:text-[#F8F5EF]">
+                  Scholarship <span className="text-[#642D42] dark:text-[#C6A66B] italic font-normal">Sathi</span>
                 </span>
-                <span className="hidden sm:inline-flex items-center gap-1 font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#142B4A]/5 dark:bg-white/10 text-[#142B4A] dark:text-slate-300 border border-slate-200 dark:border-white/10 text-[9px]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#F4A340]"></span>
+                <span className="hidden sm:inline-flex items-center gap-1 font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#C6A66B]/15 text-[#8A6D3B] dark:text-[#C6A66B] border border-[#C6A66B]/30 text-[9px]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#C6A66B]"></span>
                   Gov-Tech
                 </span>
               </div>
@@ -1213,8 +1213,8 @@ export default function ScholarsSathi() {
               }}
               className={`transition-colors cursor-pointer py-1 relative ${
                 activeView === 'home'
-                  ? 'text-[#356AE6] font-bold after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#356AE6] after:rounded-full'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white'
+                  ? 'text-[#642D42] dark:text-[#C6A66B] font-bold after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#642D42] dark:after:bg-[#C6A66B] after:rounded-full'
+                  : 'text-[#647184] dark:text-[#9AA7B8] hover:text-[#101B2D] dark:hover:text-[#F8F5EF]'
               }`}
             >
               Overview
@@ -1228,12 +1228,12 @@ export default function ScholarsSathi() {
               }}
               className={`transition-colors flex items-center gap-1.5 cursor-pointer py-1 relative ${
                 activeView === 'dashboard'
-                  ? 'text-[#356AE6] font-bold after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#356AE6] after:rounded-full'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white'
+                  ? 'text-[#642D42] dark:text-[#C6A66B] font-bold after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#642D42] dark:after:bg-[#C6A66B] after:rounded-full'
+                  : 'text-[#647184] dark:text-[#9AA7B8] hover:text-[#101B2D] dark:hover:text-[#F8F5EF]'
               }`}
             >
               <span>Scholarship Explorer</span>
-              <span className="bg-[#F4A340]/15 dark:bg-[#F4A340]/25 text-[#D97706] dark:text-[#F4A340] text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
+              <span className="bg-[#C6A66B]/15 dark:bg-[#C6A66B]/25 text-[#D97706] dark:text-[#F4A340] text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
                 {enrichedScholarships.length || DEFAULT_SCHOLARSHIPS.length}
               </span>
             </button>
@@ -1247,7 +1247,7 @@ export default function ScholarsSathi() {
                     ?.scrollIntoView({ behavior: 'smooth' });
                 }, 80);
               }}
-              className="text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white transition-colors cursor-pointer py-1"
+              className="text-[#647184] dark:text-[#9AA7B8] hover:text-[#101B2D] dark:hover:text-[#F8F5EF] transition-colors cursor-pointer py-1"
             >
               DBT Checklist
             </button>
@@ -1263,7 +1263,7 @@ export default function ScholarsSathi() {
               className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-[#142B4A] dark:hover:text-white flex items-center gap-1 transition-colors cursor-pointer py-1"
               title="Configure Backend & ML Model API URLs"
             >
-              <Plug className="w-3.5 h-3.5 text-[#356AE6]" />
+              <Plug className="w-3.5 h-3.5 text-[#642D42] dark:text-[#C6A66B]" />
               <span>API Config</span>
             </button>
           </nav>
@@ -1274,12 +1274,12 @@ export default function ScholarsSathi() {
             <button
               type="button"
               onClick={toggleSound}
-              className="w-9 h-9 p-2 rounded-xl border border-slate-200 dark:border-[#1F324E] bg-white dark:bg-[#142238] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1B2B47] transition-all cursor-pointer shadow-xs flex items-center justify-center"
+              className="w-9 h-9 p-2 rounded-xl border border-[#C6A66B]/25 dark:border-[#263852] bg-[#FAF7F2] dark:bg-[#172439] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1B2B47] transition-all cursor-pointer shadow-xs flex items-center justify-center"
               aria-label={soundEnabled ? 'Mute sound effects' : 'Enable sound effects'}
               title={soundEnabled ? 'Mute sound effects' : 'Enable sound effects'}
             >
               {soundEnabled ? (
-                <Volume2 className="w-4 h-4 text-[#356AE6]" />
+                <Volume2 className="w-4 h-4 text-[#642D42] dark:text-[#C6A66B]" />
               ) : (
                 <VolumeX className="w-4 h-4 text-slate-400" />
               )}
@@ -1289,7 +1289,7 @@ export default function ScholarsSathi() {
             <button
               type="button"
               onClick={toggleDarkMode}
-              className="w-9 h-9 p-2 rounded-xl border border-slate-200 dark:border-[#1F324E] bg-white dark:bg-[#142238] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1B2B47] transition-all cursor-pointer shadow-xs flex items-center justify-center"
+              className="w-9 h-9 p-2 rounded-xl border border-[#C6A66B]/25 dark:border-[#263852] bg-[#FAF7F2] dark:bg-[#172439] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1B2B47] transition-all cursor-pointer shadow-xs flex items-center justify-center"
               aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
@@ -1306,7 +1306,7 @@ export default function ScholarsSathi() {
                 <button
                   type="button"
                   onClick={openEditProfileModal}
-                  className="px-3.5 py-1.5 sm:py-2 text-xs flex items-center gap-1.5 rounded-xl bg-[#356AE6]/10 dark:bg-[#356AE6]/20 text-[#356AE6] dark:text-blue-300 font-bold border border-[#356AE6]/30 hover:bg-[#356AE6]/20 transition-all cursor-pointer"
+                  className="px-3.5 py-1.5 sm:py-2 text-xs flex items-center gap-1.5 rounded-xl bg-[#642D42]/10 dark:bg-[#642D42]/20 text-[#642D42] dark:text-[#C6A66B] dark:text-blue-300 font-bold border border-[#642D42]/30 hover:bg-[#642D42]/20 transition-all cursor-pointer"
                 >
                   <User className="w-3.5 h-3.5" />
                   <span className="max-w-[110px] truncate">{currentUser.name}</span>
@@ -1324,14 +1324,14 @@ export default function ScholarsSathi() {
                 <button
                   type="button"
                   onClick={() => (() => { soundFx.play('modalOpen'); setAuthModal({ open: true, tab: 'login' }); })()}
-                  className="px-3.5 py-2 text-xs font-bold text-[#142B4A] dark:text-slate-200 hover:text-[#356AE6] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#142238] rounded-xl transition-all cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-bold text-[#142B4A] dark:text-slate-200 hover:text-[#642D42] dark:text-[#C6A66B] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#142238] rounded-xl transition-all cursor-pointer"
                 >
                   Sign In
                 </button>
                 <button
                   type="button"
                   onClick={() => (() => { soundFx.play('modalOpen'); setAuthModal({ open: true, tab: 'register' }); })()}
-                  className="px-4 py-2 text-xs font-bold text-white bg-[#356AE6] hover:bg-[#2857C7] rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#642D42] hover:bg-[#522435] border border-[#C6A66B]/30 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
                   <span>Register</span>
@@ -1343,7 +1343,7 @@ export default function ScholarsSathi() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#142238] border border-slate-200 dark:border-[#1F324E]"
+              className="md:hidden p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#142238] border border-[#C6A66B]/20 dark:border-[#263852]"
               aria-label="Toggle Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -1361,12 +1361,12 @@ export default function ScholarsSathi() {
           }`}
           title="Hover or scroll up to expand navigation"
         >
-          <div className="w-16 h-1.5 sm:w-20 sm:h-2 rounded-b-full bg-[#356AE6] dark:bg-[#356AE6] shadow-md hover:w-28 hover:h-2.5 hover:bg-[#F4A340] transition-all duration-200" />
+          <div className="w-16 h-1.5 sm:w-20 sm:h-2 rounded-b-full bg-[#356AE6] dark:bg-[#356AE6] shadow-md hover:w-28 hover:h-2.5 hover:bg-[#C6A66B] transition-all duration-200" />
         </div>
 
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white dark:bg-[#0B132B] border-t border-slate-200 dark:border-[#1F324E] px-4 py-4 space-y-3 shadow-xl">
+          <div className="md:hidden bg-white dark:bg-[#0B132B] border-t border-[#C6A66B]/20 dark:border-[#263852] px-4 py-4 space-y-3 shadow-xl">
             <div className="flex flex-col space-y-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
               <button
                 type="button"
@@ -1376,7 +1376,7 @@ export default function ScholarsSathi() {
                 }}
                 className={`text-left py-2 px-3 rounded-lg flex items-center gap-2 ${
                   activeView === 'home'
-                    ? 'bg-[#356AE6]/10 text-[#356AE6] font-bold'
+                    ? 'bg-[#356AE6]/10 text-[#642D42] dark:text-[#C6A66B] font-bold'
                     : 'hover:bg-slate-50 dark:hover:bg-[#142238]'
                 }`}
               >
@@ -1390,12 +1390,12 @@ export default function ScholarsSathi() {
                 }}
                 className={`text-left py-2 px-3 rounded-lg flex items-center justify-between ${
                   activeView === 'dashboard'
-                    ? 'bg-[#356AE6]/10 text-[#356AE6] font-bold'
+                    ? 'bg-[#356AE6]/10 text-[#642D42] dark:text-[#C6A66B] font-bold'
                     : 'hover:bg-slate-50 dark:hover:bg-[#142238]'
                 }`}
               >
                 <span>Scholarship Explorer</span>
-                <span className="text-[10px] font-bold bg-[#F4A340]/20 text-[#D97706] dark:text-[#F4A340] px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold bg-[#C6A66B]/20 text-[#D97706] dark:text-[#F4A340] px-2 py-0.5 rounded-full">
                   {enrichedScholarships.length} Live
                 </span>
               </button>
@@ -1424,14 +1424,14 @@ export default function ScholarsSathi() {
                   setApiConfigModalOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className="text-left py-2 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-[#142238] text-[#356AE6] flex items-center gap-2"
+                className="text-left py-2 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-[#142238] text-[#642D42] dark:text-[#C6A66B] flex items-center gap-2"
               >
                 <Plug className="w-4 h-4" />
                 <span>Backend & ML API Config</span>
               </button>
             </div>
 
-            <div className="pt-3 border-t border-slate-100 dark:border-[#1F324E] grid grid-cols-2 gap-2">
+            <div className="pt-3 border-t border-[#C6A66B]/15 dark:border-[#263852] grid grid-cols-2 gap-2">
               {currentUser.isAuthenticated ? (
                 <>
                   <button
@@ -1440,7 +1440,7 @@ export default function ScholarsSathi() {
                       openEditProfileModal();
                       setMobileMenuOpen(false);
                     }}
-                    className="py-2.5 rounded-xl bg-[#356AE6]/10 text-[#356AE6] text-xs font-bold"
+                    className="py-2.5 rounded-xl bg-[#356AE6]/10 text-[#642D42] dark:text-[#C6A66B] text-xs font-bold"
                   >
                     Edit Profile
                   </button>
@@ -1490,12 +1490,12 @@ export default function ScholarsSathi() {
       {activeView === 'home' && (
         <main className="flex-1">
           {/* HERO BANNER: Deep Navy Blue (#142B4A) + Warm Saffron Accents */}
-          <section className="relative overflow-hidden bg-[#142B4A] text-white border-b border-slate-800">
+          <section className="relative overflow-hidden bg-[#101B2D] text-[#F8F5EF] border-b border-[#C6A66B]/25">
             {/* Subtle Minimalist Grid Pattern */}
             <div
               className="absolute inset-0 opacity-10 pointer-events-none"
               style={{
-                backgroundImage: 'radial-gradient(#F4A340 1px, transparent 1px)',
+                backgroundImage: 'radial-gradient(#C6A66B 1px, transparent 1px)',
                 backgroundSize: '28px 28px'
               }}
             />
@@ -1507,7 +1507,7 @@ export default function ScholarsSathi() {
                 {/* Leftmost Hero Copy & Mission */}
                 <div className="lg:col-span-5 xl:col-span-5 space-y-6 text-left">
                   <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-slate-200 text-xs font-semibold backdrop-blur-xs">
-                    <span className="w-2 h-2 rounded-full bg-[#F4A340] animate-pulse"></span>
+                    <span className="w-2 h-2 rounded-full bg-[#C6A66B] animate-pulse"></span>
                     <span className="text-[#F4A340] font-bold">Government-Tech Initiative</span>
                     <span className="text-white/40">|</span>
                     <span>AI-Driven Eligibility & DBT Verification</span>
@@ -1532,7 +1532,7 @@ export default function ScholarsSathi() {
                         setActiveView('dashboard');
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="px-6 py-3.5 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-sm shadow-md transition-all transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer"
+                      className="px-6 py-3.5 rounded-xl bg-[#642D42] hover:bg-[#522435] text-[#F8F5EF] border border-[#C6A66B]/30 font-bold text-sm shadow-md transition-all transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer"
                     >
                       <Compass className="w-4 h-4" />
                       <span>Explore Scholarships</span>
@@ -1631,18 +1631,18 @@ export default function ScholarsSathi() {
 
                 {/* Rightmost Hero Card: Instant Eligibility Check */}
                 <div className="lg:col-span-4 xl:col-span-4 w-full flex justify-end">
-                  <div className="w-full max-w-md ml-auto bg-white dark:bg-[#142238] text-[#263449] dark:text-slate-100 rounded-2xl p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-[#1F324E]">
-                    <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-100 dark:border-[#1F324E]">
+                  <div className="w-full max-w-md ml-auto bg-white dark:bg-[#172439] text-[#25282D] dark:text-[#F8F5EF] rounded-2xl p-6 sm:p-7 shadow-2xl border border-[#C6A66B]/20 dark:border-[#263852]">
+                    <div className="flex items-center justify-between mb-5 pb-4 border-b border-[#C6A66B]/15 dark:border-[#263852]">
                       <div>
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#356AE6] uppercase tracking-wider">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#642D42] dark:text-[#C6A66B] uppercase tracking-wider">
                           <Cpu className="w-3.5 h-3.5" />
                           <span>Instant Eligibility Check</span>
                         </div>
-                        <h2 className="text-lg font-bold text-[#142B4A] dark:text-white mt-0.5">
+                        <h2 className="font-serif text-lg font-bold text-[#101B2D] dark:text-[#F8F5EF] mt-0.5">
                           Test In 10 Seconds
                         </h2>
                       </div>
-                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#F4A340]/15 text-[#D97706] dark:text-[#F4A340]">
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#C6A66B]/15 text-[#D97706] dark:text-[#F4A340]">
                         No Login Required
                       </span>
                     </div>
@@ -1653,13 +1653,13 @@ export default function ScholarsSathi() {
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                           Citizenship / Residency
                         </label>
-                        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E]">
+                        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-[#EEE7DA]/60 dark:bg-[#121E31] border border-[#C6A66B]/20 dark:border-[#263852]">
                           <button
                             type="button"
                             onClick={() => handleQuickNationalityChange('Indian')}
                             className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                               quickCheck.nationality === 'Indian'
-                                ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                                ? 'bg-white dark:bg-[#1B2B47] text-[#101B2D] dark:text-[#F8F5EF] shadow-xs'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                             }`}
                           >
@@ -1670,11 +1670,11 @@ export default function ScholarsSathi() {
                             onClick={() => handleQuickNationalityChange('International')}
                             className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                               quickCheck.nationality === 'International'
-                                ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                                ? 'bg-white dark:bg-[#1B2B47] text-[#101B2D] dark:text-[#F8F5EF] shadow-xs'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                             }`}
                           >
-                            <Globe className="w-3.5 h-3.5 text-[#356AE6]" />
+                            <Globe className="w-3.5 h-3.5 text-[#642D42] dark:text-[#C6A66B]" />
                             <span>Outside India</span>
                           </button>
                         </div>
@@ -1800,7 +1800,7 @@ export default function ScholarsSathi() {
 
                       <button
                         type="submit"
-                        className="w-full py-3 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-1"
+                        className="w-full py-3 rounded-xl bg-[#642D42] hover:bg-[#522435] text-[#F8F5EF] border border-[#C6A66B]/30 font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-1"
                       >
                         <Sparkles className="w-4 h-4 text-[#F4A340]" />
                         <span>Run ML Match & View Matching Schemes</span>
@@ -1816,10 +1816,10 @@ export default function ScholarsSathi() {
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
               <div>
-                <span className="text-xs font-extrabold uppercase tracking-wider text-[#356AE6]">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-[#642D42] dark:text-[#C6A66B]">
                   Verified Portal Directory
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#142B4A] dark:text-white mt-1">
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#101B2D] dark:text-[#F8F5EF] mt-1">
                   Active Central, State & CSR Scholarships
                 </h2>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">
@@ -1833,10 +1833,10 @@ export default function ScholarsSathi() {
                   setActiveView('dashboard');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white dark:bg-[#142238] border border-slate-200 dark:border-[#1F324E] text-xs font-bold text-[#142B4A] dark:text-white hover:text-[#356AE6] dark:hover:text-[#356AE6] transition cursor-pointer shadow-xs"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white dark:bg-[#172439] border border-[#C6A66B]/20 dark:border-[#263852] text-xs font-bold text-[#101B2D] dark:text-[#F8F5EF] hover:text-[#642D42] dark:text-[#C6A66B] dark:hover:text-[#642D42] dark:text-[#C6A66B] transition cursor-pointer shadow-xs"
               >
                 <span>Browse All {enrichedScholarships.length || DEFAULT_SCHOLARSHIPS.length} Schemes</span>
-                <ArrowRight className="w-3.5 h-3.5 text-[#356AE6]" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#642D42] dark:text-[#C6A66B]" />
               </button>
             </div>
 
@@ -1852,7 +1852,7 @@ export default function ScholarsSathi() {
                   return (
                     <div
                       key={sch.id}
-                      className="bg-white dark:bg-[#142238] rounded-2xl border border-slate-200/90 dark:border-[#1F324E] p-6 shadow-[0_2px_8px_rgba(20,43,74,0.04)] hover:shadow-md hover:border-[#356AE6]/50 dark:hover:border-[#356AE6]/50 transition-all flex flex-col justify-between"
+                      className="bg-white dark:bg-[#172439] rounded-2xl border border-[#C6A66B]/20 dark:border-[#263852] p-6 shadow-[0_2px_8px_rgba(20,43,74,0.04)] hover:shadow-md hover:border-[#356AE6]/50 dark:hover:border-[#356AE6]/50 transition-all flex flex-col justify-between"
                     >
                       <div>
                         {/* Top Badges */}
@@ -1883,10 +1883,10 @@ export default function ScholarsSathi() {
                         </div>
 
                         {/* Provider Category & Title */}
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#356AE6]">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#642D42] dark:text-[#C6A66B]">
                           {sch.provider}
                         </span>
-                        <h3 className="text-base font-extrabold text-[#142B4A] dark:text-white mt-1 leading-snug line-clamp-2">
+                        <h3 className="font-serif text-base font-bold text-[#101B2D] dark:text-[#F8F5EF] mt-1 leading-snug line-clamp-2">
                           {sch.title}
                         </h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
@@ -1895,13 +1895,13 @@ export default function ScholarsSathi() {
                         </p>
 
                         {/* Grant Amount & Criteria Preview */}
-                        <div className="my-4 p-3 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-100 dark:border-[#1F324E] flex items-center justify-between">
+                        <div className="my-4 p-3 rounded-xl bg-[#EEE7DA]/40 dark:bg-[#121E31] border border-[#C6A66B]/15 dark:border-[#263852] flex items-center justify-between">
                           <div>
                             <span className="text-[10px] font-bold text-slate-500 uppercase block">
                               Benefit Grant
                             </span>
-                            <span className="text-lg font-extrabold text-[#142B4A] dark:text-white flex items-center">
-                              <IndianRupee className="w-4 h-4 text-[#356AE6]" />
+                            <span className="text-lg font-extrabold text-[#101B2D] dark:text-[#F8F5EF] flex items-center">
+                              <IndianRupee className="w-4 h-4 text-[#642D42] dark:text-[#C6A66B]" />
                               {sch.amount.toLocaleString('en-IN')}
                               <span className="text-[11px] font-normal text-slate-500 ml-1">/ yr</span>
                             </span>
@@ -1918,7 +1918,7 @@ export default function ScholarsSathi() {
 
                         {/* ML Insight Snippet */}
                         <div className="p-3 rounded-xl bg-[#356AE6]/5 dark:bg-[#356AE6]/10 border border-[#356AE6]/15 text-xs text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-                          <div className="flex items-center gap-1 font-bold text-[#356AE6] mb-0.5">
+                          <div className="flex items-center gap-1 font-bold text-[#642D42] dark:text-[#C6A66B] mb-0.5">
                             <Sparkles className="w-3 h-3 text-[#F4A340]" />
                             <span>AI Eligibility Insight</span>
                           </div>
@@ -1927,11 +1927,11 @@ export default function ScholarsSathi() {
                       </div>
 
                       {/* Action Footer */}
-                      <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-[#1F324E]">
+                      <div className="flex items-center gap-2 pt-3 border-t border-[#C6A66B]/15 dark:border-[#263852]">
                         <button
                           type="button"
                           onClick={() => openScholarshipDetail(sch)}
-                          className="flex-1 py-2 px-3 rounded-xl bg-[#142B4A] hover:bg-[#356AE6] dark:bg-[#356AE6] dark:hover:bg-[#2857C7] text-white font-bold text-xs transition text-center cursor-pointer"
+                          className="flex-1 py-2 px-3 rounded-xl bg-[#642D42] hover:bg-[#522435] text-[#F8F5EF] border border-[#C6A66B]/30 text-white font-bold text-xs transition text-center cursor-pointer"
                         >
                           AI Breakdown & Details
                         </button>
@@ -1939,10 +1939,10 @@ export default function ScholarsSathi() {
                           href={sch.applyUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="py-2 px-3 rounded-xl bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] text-[#142B4A] dark:text-slate-200 font-bold text-xs transition flex items-center gap-1"
+                          className="py-2 px-3 rounded-xl bg-[#EEE7DA]/60 dark:bg-[#121E31] hover:bg-slate-200 dark:hover:bg-[#1B2B47] text-[#142B4A] dark:text-slate-200 font-bold text-xs transition flex items-center gap-1"
                         >
                           <span>Portal</span>
-                          <ExternalLink className="w-3 h-3 text-[#356AE6]" />
+                          <ExternalLink className="w-3 h-3 text-[#642D42] dark:text-[#C6A66B]" />
                         </a>
                       </div>
                     </div>
@@ -1954,14 +1954,14 @@ export default function ScholarsSathi() {
           {/* PRACTICAL STUDENT READINESS TOOLKIT SECTION */}
           <section
             id="practical-toolkit"
-            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-t border-slate-200 dark:border-[#1F324E]"
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-t border-[#C6A66B]/20 dark:border-[#263852]"
           >
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-[#356AE6]">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#642D42] dark:text-[#C6A66B]">
                   Student Success Hub
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#142B4A] dark:text-white mt-1">
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#101B2D] dark:text-[#F8F5EF] mt-1">
                   Practical DBT Document Readiness
                 </h2>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">
@@ -1987,7 +1987,7 @@ export default function ScholarsSathi() {
                       className={`flex items-start gap-3.5 p-4 rounded-xl border cursor-pointer transition-all ${
                         checked
                           ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800'
-                          : 'bg-white dark:bg-[#142238] border-slate-200 dark:border-[#1F324E] hover:border-[#356AE6]/50'
+                          : 'bg-white dark:bg-[#172439] border-[#C6A66B]/20 dark:border-[#263852] hover:border-[#356AE6]/50'
                       }`}
                     >
                       <input
@@ -2001,7 +2001,7 @@ export default function ScholarsSathi() {
                           className={`text-sm font-bold ${
                             checked
                               ? 'text-emerald-900 dark:text-emerald-300 line-through'
-                              : 'text-[#142B4A] dark:text-white'
+                              : 'text-[#101B2D] dark:text-[#F8F5EF]'
                           }`}
                         >
                           {item.title}
@@ -2066,7 +2066,7 @@ export default function ScholarsSathi() {
                     setActiveView('dashboard');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="mt-6 w-full py-3 rounded-xl bg-[#F4A340] hover:bg-[#E08F2D] text-slate-950 font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2"
+                  className="mt-6 w-full py-3 rounded-xl bg-[#C6A66B] hover:bg-[#E08F2D] text-slate-950 font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2"
                 >
                   <span>Go to Full Explorer & Match Schemes</span>
                   <ArrowRight className="w-4 h-4" />
@@ -2083,7 +2083,7 @@ export default function ScholarsSathi() {
       {activeView === 'dashboard' && (
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
           {/* Top Breadcrumb & BACK BUTTON (Requirement 2: add a back button) */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-[#1F324E]">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-[#C6A66B]/20 dark:border-[#263852]">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -2091,9 +2091,9 @@ export default function ScholarsSathi() {
                   setActiveView('home');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-[#142B4A] dark:text-slate-200 bg-white dark:bg-[#142238] border border-slate-200 dark:border-[#1F324E] hover:bg-slate-50 dark:hover:bg-[#1B2B47] hover:border-[#356AE6] dark:hover:border-[#356AE6] transition cursor-pointer group shadow-xs"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-[#142B4A] dark:text-slate-200 bg-white dark:bg-[#172439] border border-[#C6A66B]/20 dark:border-[#263852] hover:bg-slate-50 dark:hover:bg-[#1B2B47] hover:border-[#356AE6] dark:hover:border-[#356AE6] transition cursor-pointer group shadow-xs"
               >
-                <ArrowLeft className="w-3.5 h-3.5 text-[#356AE6] transition-transform group-hover:-translate-x-1" />
+                <ArrowLeft className="w-3.5 h-3.5 text-[#642D42] dark:text-[#C6A66B] transition-transform group-hover:-translate-x-1" />
                 <span>Back to Overview</span>
               </button>
 
@@ -2116,7 +2116,7 @@ export default function ScholarsSathi() {
                   className={`w-2 h-2 rounded-full ${
                     apiStatus.color === 'emerald'
                       ? 'bg-emerald-500'
-                      : 'bg-[#F4A340] animate-pulse'
+                      : 'bg-[#C6A66B] animate-pulse'
                   }`}
                 />
                 <span>{apiStatus.label}</span>
@@ -2125,10 +2125,10 @@ export default function ScholarsSathi() {
               <button
                 type="button"
                 onClick={() => refreshAllData(currentUser, apiConfig)}
-                className="p-2 rounded-lg bg-white dark:bg-[#142238] border border-slate-200 dark:border-[#1F324E] text-slate-700 dark:text-slate-200 hover:text-[#356AE6] hover:border-[#356AE6] transition cursor-pointer shadow-xs"
+                className="p-2 rounded-lg bg-white dark:bg-[#172439] border border-[#C6A66B]/20 dark:border-[#263852] text-slate-700 dark:text-slate-200 hover:text-[#642D42] dark:text-[#C6A66B] hover:border-[#356AE6] transition cursor-pointer shadow-xs"
                 title="Refresh ML match scores"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingML ? 'animate-spin text-[#356AE6]' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingML ? 'animate-spin text-[#642D42] dark:text-[#C6A66B]' : ''}`} />
               </button>
             </div>
           </div>
@@ -2136,7 +2136,7 @@ export default function ScholarsSathi() {
           {/* Dashboard Header Bar */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#142B4A] dark:text-white">
+              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#101B2D] dark:text-[#F8F5EF]">
                 Scholarship Discovery Explorer
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5">
@@ -2148,15 +2148,15 @@ export default function ScholarsSathi() {
               <button
                 type="button"
                 onClick={openEditProfileModal}
-                className="px-3.5 py-2 rounded-xl bg-white dark:bg-[#142238] border border-slate-200 dark:border-[#1F324E] hover:border-[#356AE6] text-[#142B4A] dark:text-slate-200 font-bold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-white dark:bg-[#172439] border border-[#C6A66B]/20 dark:border-[#263852] hover:border-[#356AE6] text-[#142B4A] dark:text-slate-200 font-bold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer"
               >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-[#356AE6]" />
+                <SlidersHorizontal className="w-3.5 h-3.5 text-[#642D42] dark:text-[#C6A66B]" />
                 <span>Adjust Profile</span>
               </button>
               <button
                 type="button"
                 onClick={() => refreshAllData(currentUser, apiConfig)}
-                className="px-4 py-2 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#642D42] hover:bg-[#522435] text-[#F8F5EF] border border-[#C6A66B]/30 font-bold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isLoadingML ? 'animate-spin' : ''}`} />
                 <span>Re-Evaluate ML</span>
@@ -2166,7 +2166,7 @@ export default function ScholarsSathi() {
 
           {/* KPI Summary Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-6">
-            <div className="bg-white dark:bg-[#142238] p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#1F324E] shadow-xs flex items-center gap-3.5">
+            <div className="bg-white dark:bg-[#172439] p-4 sm:p-5 rounded-2xl border border-[#C6A66B]/20 dark:border-[#263852] shadow-xs flex items-center gap-3.5">
               <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
@@ -2174,27 +2174,27 @@ export default function ScholarsSathi() {
                 <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Eligible Schemes
                 </p>
-                <p className="text-xl sm:text-2xl font-extrabold text-[#142B4A] dark:text-white">
+                <p className="text-xl sm:font-serif text-2xl font-bold text-[#101B2D] dark:text-[#F8F5EF]">
                   {dashboardStats.eligibleCount}
                 </p>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#142238] p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#1F324E] shadow-xs flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-[#356AE6]/10 text-[#356AE6] flex items-center justify-center shrink-0">
+            <div className="bg-white dark:bg-[#172439] p-4 sm:p-5 rounded-2xl border border-[#C6A66B]/20 dark:border-[#263852] shadow-xs flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-[#356AE6]/10 text-[#642D42] dark:text-[#C6A66B] flex items-center justify-center shrink-0">
                 <IndianRupee className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Eligible Grant Total
                 </p>
-                <p className="text-xl sm:text-2xl font-extrabold text-[#142B4A] dark:text-white">
+                <p className="text-xl sm:font-serif text-2xl font-bold text-[#101B2D] dark:text-[#F8F5EF]">
                   ₹{dashboardStats.totalFunding.toLocaleString('en-IN')}
                 </p>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#142238] p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#1F324E] shadow-xs flex items-center gap-3.5">
+            <div className="bg-white dark:bg-[#172439] p-4 sm:p-5 rounded-2xl border border-[#C6A66B]/20 dark:border-[#263852] shadow-xs flex items-center gap-3.5">
               <div className="w-11 h-11 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
                 <Bell className="w-5 h-5" />
               </div>
@@ -2202,21 +2202,21 @@ export default function ScholarsSathi() {
                 <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Closing Soon (&le;30d)
                 </p>
-                <p className="text-xl sm:text-2xl font-extrabold text-[#142B4A] dark:text-white">
+                <p className="text-xl sm:font-serif text-2xl font-bold text-[#101B2D] dark:text-[#F8F5EF]">
                   {dashboardStats.urgentCount}
                 </p>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#142238] p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#1F324E] shadow-xs flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-[#F4A340]/15 text-[#D97706] dark:text-[#F4A340] flex items-center justify-center shrink-0">
+            <div className="bg-white dark:bg-[#172439] p-4 sm:p-5 rounded-2xl border border-[#C6A66B]/20 dark:border-[#263852] shadow-xs flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-[#C6A66B]/15 text-[#D97706] dark:text-[#F4A340] flex items-center justify-center shrink-0">
                 <Bookmark className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Tracked / Saved
                 </p>
-                <p className="text-xl sm:text-2xl font-extrabold text-[#142B4A] dark:text-white">
+                <p className="text-xl sm:font-serif text-2xl font-bold text-[#101B2D] dark:text-[#F8F5EF]">
                   {dashboardStats.trackedCount}
                 </p>
               </div>
@@ -2263,7 +2263,7 @@ export default function ScholarsSathi() {
             <button
               type="button"
               onClick={openEditProfileModal}
-              className="text-xs font-bold px-3 py-1.5 rounded-lg bg-[#F4A340] text-slate-950 hover:bg-[#E08F2D] transition cursor-pointer"
+              className="text-xs font-bold px-3 py-1.5 rounded-lg bg-[#C6A66B] text-slate-950 hover:bg-[#E08F2D] transition cursor-pointer"
             >
               Update Profile
             </button>
@@ -2289,7 +2289,7 @@ export default function ScholarsSathi() {
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                     active
                       ? 'bg-[#356AE6] text-white shadow-xs'
-                      : 'bg-white dark:bg-[#142238] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#1F324E] hover:border-[#356AE6]'
+                      : 'bg-white dark:bg-[#172439] text-slate-600 dark:text-slate-300 border border-[#C6A66B]/20 dark:border-[#263852] hover:border-[#356AE6]'
                   }`}
                 >
                   {cat.label}
@@ -2299,7 +2299,7 @@ export default function ScholarsSathi() {
           </div>
 
           {/* Search, Filter & Sort Controls Bar */}
-          <div className="bg-white dark:bg-[#142238] p-4 rounded-2xl border border-slate-200/90 dark:border-[#1F324E] shadow-xs mb-6">
+          <div className="bg-white dark:bg-[#172439] p-4 rounded-2xl border border-[#C6A66B]/20 dark:border-[#263852] shadow-xs mb-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3">
               {/* Search Box */}
               <div className="md:col-span-5 relative">
@@ -2309,7 +2309,7 @@ export default function ScholarsSathi() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by scholarship title, ministry, or keyword..."
-                  className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E] text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#356AE6]"
+                  className="w-full pl-9 pr-8 py-2 rounded-xl bg-[#EEE7DA]/40 dark:bg-[#121E31] border border-[#C6A66B]/20 dark:border-[#263852] text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#356AE6]"
                 />
                 {searchQuery && (
                   <button
@@ -2327,7 +2327,7 @@ export default function ScholarsSathi() {
                 <select
                   value={eligibilityFilter}
                   onChange={(e) => setEligibilityFilter(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E] text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#356AE6]"
+                  className="w-full px-3 py-2 rounded-xl bg-[#EEE7DA]/40 dark:bg-[#121E31] border border-[#C6A66B]/20 dark:border-[#263852] text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#356AE6]"
                 >
                   <option value="ALL">All Match Status</option>
                   <option value="ELIGIBLE">Fully Eligible Only</option>
@@ -2341,7 +2341,7 @@ export default function ScholarsSathi() {
                 <select
                   value={providerFilter}
                   onChange={(e) => setProviderFilter(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E] text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#356AE6]"
+                  className="w-full px-3 py-2 rounded-xl bg-[#EEE7DA]/40 dark:bg-[#121E31] border border-[#C6A66B]/20 dark:border-[#263852] text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#356AE6]"
                 >
                   <option value="ALL">All Scheme Providers</option>
                   <option value="Central Govt">Central Govt (NSP)</option>
@@ -2356,7 +2356,7 @@ export default function ScholarsSathi() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E] text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#356AE6]"
+                  className="w-full px-3 py-2 rounded-xl bg-[#EEE7DA]/40 dark:bg-[#121E31] border border-[#C6A66B]/20 dark:border-[#263852] text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#356AE6]"
                 >
                   <option value="SCORE">Sort: ML Match %</option>
                   <option value="DEADLINE">Sort: Deadline</option>
@@ -2367,14 +2367,14 @@ export default function ScholarsSathi() {
 
             {/* Active Filters Bar and Clear Button */}
             {hasActiveFilters && (
-              <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100 dark:border-[#1F324E] text-xs">
+              <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#C6A66B]/15 dark:border-[#263852] text-xs">
                 <span className="text-slate-500 dark:text-slate-400">
                   Showing <strong>{filteredScholarships.length}</strong> matching scholarships
                 </span>
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="font-bold text-[#356AE6] hover:underline flex items-center gap-1 cursor-pointer"
+                  className="font-bold text-[#642D42] dark:text-[#C6A66B] hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <RefreshCw className="w-3 h-3" />
                   <span>Reset All Filters</span>
@@ -2385,11 +2385,11 @@ export default function ScholarsSathi() {
 
           {/* Scholarship Discovery Cards Grid */}
           {filteredScholarships.length === 0 ? (
-            <div className="text-center py-16 bg-white dark:bg-[#142238] rounded-2xl border border-slate-200 dark:border-[#1F324E] p-8">
+            <div className="text-center py-16 bg-white dark:bg-[#172439] rounded-2xl border border-[#C6A66B]/20 dark:border-[#263852] p-8">
               <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center mb-3">
                 <Search className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-[#142B4A] dark:text-white">
+              <h3 className="font-serif text-lg font-bold text-[#101B2D] dark:text-[#F8F5EF]">
                 No matching scholarships found
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1 mb-4">
@@ -2415,7 +2415,7 @@ export default function ScholarsSathi() {
                 return (
                   <div
                     key={sch.id}
-                    className="bg-white dark:bg-[#142238] rounded-2xl border border-slate-200/90 dark:border-[#1F324E] p-5 sm:p-6 shadow-[0_2px_8px_rgba(20,43,74,0.04)] hover:shadow-lg hover:border-[#356AE6]/50 transition-all flex flex-col justify-between"
+                    className="bg-white dark:bg-[#172439] rounded-2xl border border-[#C6A66B]/20 dark:border-[#263852] p-5 sm:p-6 shadow-[0_2px_8px_rgba(20,43,74,0.04)] hover:shadow-lg hover:border-[#356AE6]/50 transition-all flex flex-col justify-between"
                   >
                     <div>
                       {/* Top Badges: Status & Deadline */}
@@ -2446,10 +2446,10 @@ export default function ScholarsSathi() {
                       </div>
 
                       {/* Provider & Title */}
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#356AE6]">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#642D42] dark:text-[#C6A66B]">
                         {sch.provider}
                       </span>
-                      <h3 className="text-base font-extrabold text-[#142B4A] dark:text-white mt-1 leading-snug line-clamp-2">
+                      <h3 className="font-serif text-base font-bold text-[#101B2D] dark:text-[#F8F5EF] mt-1 leading-snug line-clamp-2">
                         {sch.title}
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
@@ -2458,13 +2458,13 @@ export default function ScholarsSathi() {
                       </p>
 
                       {/* Benefit Grant Box */}
-                      <div className="my-3.5 p-3 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-100 dark:border-[#1F324E] flex items-center justify-between">
+                      <div className="my-3.5 p-3 rounded-xl bg-[#EEE7DA]/40 dark:bg-[#121E31] border border-[#C6A66B]/15 dark:border-[#263852] flex items-center justify-between">
                         <div>
                           <span className="text-[10px] font-bold text-slate-500 uppercase block">
                             Scholarship Benefit
                           </span>
-                          <span className="text-lg font-extrabold text-[#142B4A] dark:text-white flex items-center">
-                            <IndianRupee className="w-4 h-4 text-[#356AE6]" />
+                          <span className="text-lg font-extrabold text-[#101B2D] dark:text-[#F8F5EF] flex items-center">
+                            <IndianRupee className="w-4 h-4 text-[#642D42] dark:text-[#C6A66B]" />
                             {sch.amount.toLocaleString('en-IN')}{' '}
                             <span className="text-[11px] font-normal text-slate-500 ml-1">/ yr</span>
                           </span>
@@ -2481,7 +2481,7 @@ export default function ScholarsSathi() {
 
                       {/* AI Eligibility Insight Snippet */}
                       <div className="p-3 rounded-xl bg-[#356AE6]/5 dark:bg-[#356AE6]/10 border border-[#356AE6]/15 text-xs text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-                        <div className="flex items-center gap-1 font-bold text-[#356AE6] mb-1">
+                        <div className="flex items-center gap-1 font-bold text-[#642D42] dark:text-[#C6A66B] mb-1">
                           <Sparkles className="w-3.5 h-3.5 text-[#F4A340]" />
                           <span>ML Match Insight</span>
                         </div>
@@ -2490,12 +2490,12 @@ export default function ScholarsSathi() {
                     </div>
 
                     {/* Action Footer & Application Tracking */}
-                    <div className="pt-3 border-t border-slate-100 dark:border-[#1F324E] space-y-2">
+                    <div className="pt-3 border-t border-[#C6A66B]/15 dark:border-[#263852] space-y-2">
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => openScholarshipDetail(sch)}
-                          className="flex-1 py-2 px-3 rounded-xl bg-[#142B4A] hover:bg-[#356AE6] dark:bg-[#356AE6] dark:hover:bg-[#2857C7] text-white font-bold text-xs transition text-center cursor-pointer"
+                          className="flex-1 py-2 px-3 rounded-xl bg-[#642D42] hover:bg-[#522435] text-[#F8F5EF] border border-[#C6A66B]/30 text-white font-bold text-xs transition text-center cursor-pointer"
                         >
                           AI Breakdown & Details
                         </button>
@@ -2503,11 +2503,11 @@ export default function ScholarsSathi() {
                           href={sch.applyUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="py-2 px-3 rounded-xl bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] text-[#142B4A] dark:text-slate-200 font-bold text-xs transition flex items-center gap-1"
+                          className="py-2 px-3 rounded-xl bg-[#EEE7DA]/60 dark:bg-[#121E31] hover:bg-slate-200 dark:hover:bg-[#1B2B47] text-[#142B4A] dark:text-slate-200 font-bold text-xs transition flex items-center gap-1"
                           title="Apply on Official Portal"
                         >
                           <span>Apply</span>
-                          <ExternalLink className="w-3.5 h-3.5 text-[#356AE6]" />
+                          <ExternalLink className="w-3.5 h-3.5 text-[#642D42] dark:text-[#C6A66B]" />
                         </a>
                       </div>
 
@@ -2517,7 +2517,7 @@ export default function ScholarsSathi() {
                         <select
                           value={currentStatus}
                           onChange={(e) => handleStatusChange(sch.id, e.target.value)}
-                          className="bg-transparent font-bold text-xs text-[#356AE6] cursor-pointer focus:outline-none"
+                          className="bg-transparent font-bold text-xs text-[#642D42] dark:text-[#C6A66B] cursor-pointer focus:outline-none"
                         >
                           <option value="">+ Mark Status</option>
                           <option value="Saved">📌 Saved for Later</option>
@@ -2543,24 +2543,24 @@ export default function ScholarsSathi() {
           onClick={() => { soundFx.play('modalClose'); setDetailModal({ ...detailModal, open: false }); }}
         >
           <div
-            className="bg-white dark:bg-[#142238] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 dark:border-[#1F324E] p-6 sm:p-8 relative my-auto text-[#263449] dark:text-slate-100"
+            className="bg-white dark:bg-[#172439] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#C6A66B]/20 dark:border-[#263852] p-6 sm:p-8 relative my-auto text-[#25282D] dark:text-[#F8F5EF]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Top Navigation Row: Dedicated BACK BUTTON & Close Button */}
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-[#1F324E]">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#C6A66B]/15 dark:border-[#263852]">
               <button
                 type="button"
                 onClick={() => { soundFx.play('modalClose'); setDetailModal({ ...detailModal, open: false }); }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[#142B4A] dark:text-slate-200 bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] transition cursor-pointer group"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[#142B4A] dark:text-slate-200 bg-[#EEE7DA]/60 dark:bg-[#121E31] hover:bg-slate-200 dark:hover:bg-[#1B2B47] transition cursor-pointer group"
               >
-                <ArrowLeft className="w-4 h-4 text-[#356AE6] transition-transform group-hover:-translate-x-1" />
+                <ArrowLeft className="w-4 h-4 text-[#642D42] dark:text-[#C6A66B] transition-transform group-hover:-translate-x-1" />
                 <span>Back to Scholarships</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => { soundFx.play('modalClose'); setDetailModal({ ...detailModal, open: false }); }}
-                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-[#EEE7DA]/60 dark:bg-[#121E31] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />
@@ -2569,7 +2569,7 @@ export default function ScholarsSathi() {
 
             {detailModal.loading ? (
               <div className="py-16 text-center text-slate-500 dark:text-slate-400 font-semibold space-y-3">
-                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#356AE6]" />
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#642D42] dark:text-[#C6A66B]" />
                 <p>Querying ML Model API for personalized eligibility breakdown...</p>
               </div>
             ) : (
@@ -2581,29 +2581,29 @@ export default function ScholarsSathi() {
                 return (
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#356AE6]/10 text-[#356AE6]">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#356AE6]/10 text-[#642D42] dark:text-[#C6A66B]">
                         {sch.provider}
                       </span>
                       <span className="text-xs text-slate-400">•</span>
                       <span className="text-xs text-slate-500 dark:text-slate-400">{sch.ministry}</span>
                     </div>
 
-                    <h2 className="text-2xl font-extrabold text-[#142B4A] dark:text-white mt-2">
+                    <h2 className="font-serif text-2xl font-bold text-[#101B2D] dark:text-[#F8F5EF] mt-2">
                       {sch.title}
                     </h2>
 
                     {/* Quick Metric Cards */}
                     <div className="grid grid-cols-3 gap-3 my-6">
-                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E]">
+                      <div className="p-3.5 rounded-xl bg-[#EEE7DA]/40 dark:bg-[#121E31] border border-[#C6A66B]/20 dark:border-[#263852]">
                         <span className="text-[10px] font-bold text-slate-500 uppercase block">
                           Benefit Grant
                         </span>
-                        <p className="text-lg font-extrabold text-[#142B4A] dark:text-white mt-0.5 flex items-center">
-                          <IndianRupee className="w-4 h-4 text-[#356AE6]" />
+                        <p className="text-lg font-extrabold text-[#101B2D] dark:text-[#F8F5EF] mt-0.5 flex items-center">
+                          <IndianRupee className="w-4 h-4 text-[#642D42] dark:text-[#C6A66B]" />
                           {sch.amount.toLocaleString('en-IN')}
                         </p>
                       </div>
-                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E]">
+                      <div className="p-3.5 rounded-xl bg-[#EEE7DA]/40 dark:bg-[#121E31] border border-[#C6A66B]/20 dark:border-[#263852]">
                         <span className="text-[10px] font-bold text-slate-500 uppercase block">
                           Deadline
                         </span>
@@ -2611,7 +2611,7 @@ export default function ScholarsSathi() {
                           {sch.deadlineDate}
                         </p>
                       </div>
-                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E]">
+                      <div className="p-3.5 rounded-xl bg-[#EEE7DA]/40 dark:bg-[#121E31] border border-[#C6A66B]/20 dark:border-[#263852]">
                         <span className="text-[10px] font-bold text-slate-500 uppercase block">
                           ML Match Score
                         </span>
@@ -2623,8 +2623,8 @@ export default function ScholarsSathi() {
 
                     {/* AI Explanation Box */}
                     <div className="p-4 rounded-xl bg-[#356AE6]/10 dark:bg-[#356AE6]/15 border border-[#356AE6]/20 mb-6">
-                      <div className="flex items-center gap-2 font-extrabold text-[#142B4A] dark:text-white text-xs mb-1.5">
-                        <Bot className="w-4 h-4 text-[#356AE6]" />
+                      <div className="flex items-center gap-2 font-extrabold text-[#101B2D] dark:text-[#F8F5EF] text-xs mb-1.5">
+                        <Bot className="w-4 h-4 text-[#642D42] dark:text-[#C6A66B]" />
                         <span>AI-Generated Eligibility Assessment</span>
                       </div>
                       <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
@@ -2633,7 +2633,7 @@ export default function ScholarsSathi() {
                     </div>
 
                     {/* Criteria Evaluation Checklist */}
-                    <h4 className="font-bold text-[#142B4A] dark:text-white text-xs uppercase tracking-wider mb-2.5">
+                    <h4 className="font-bold text-[#101B2D] dark:text-[#F8F5EF] text-xs uppercase tracking-wider mb-2.5">
                       Criterion-by-Criterion Evaluation
                     </h4>
                     <div className="space-y-2 mb-6">
@@ -2647,7 +2647,7 @@ export default function ScholarsSathi() {
                           }`}
                         >
                           <div>
-                            <p className="text-xs font-bold text-[#142B4A] dark:text-white">{c.label}</p>
+                            <p className="text-xs font-bold text-[#101B2D] dark:text-[#F8F5EF]">{c.label}</p>
                             <p className="text-xs text-slate-600 dark:text-slate-400">{c.detail}</p>
                           </div>
                           <span
@@ -2664,23 +2664,23 @@ export default function ScholarsSathi() {
                     </div>
 
                     {/* Required Documents */}
-                    <h4 className="font-bold text-[#142B4A] dark:text-white text-xs uppercase tracking-wider mb-2">
+                    <h4 className="font-bold text-[#101B2D] dark:text-[#F8F5EF] text-xs uppercase tracking-wider mb-2">
                       Required Documents Checklist
                     </h4>
                     <ul className="grid sm:grid-cols-2 gap-2 mb-6">
                       {sch.documents.map((doc, idx) => (
                         <li
                           key={idx}
-                          className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#0F1A2E] px-3 py-2 rounded-xl border border-slate-200 dark:border-[#1F324E]"
+                          className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 bg-[#EEE7DA]/40 dark:bg-[#121E31] px-3 py-2 rounded-xl border border-[#C6A66B]/20 dark:border-[#263852]"
                         >
-                          <FileText className="w-3.5 h-3.5 text-[#356AE6] shrink-0" />
+                          <FileText className="w-3.5 h-3.5 text-[#642D42] dark:text-[#C6A66B] shrink-0" />
                           <span>{doc}</span>
                         </li>
                       ))}
                     </ul>
 
                     {/* Tracking Status & Direct Official Link */}
-                    <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-[#1F324E]">
+                    <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[#C6A66B]/20 dark:border-[#263852]">
                       <div className="flex items-center gap-2">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                           My Status:
@@ -2700,7 +2700,7 @@ export default function ScholarsSathi() {
                         href={sch.applyUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-5 py-2.5 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer"
+                        className="px-5 py-2.5 rounded-xl bg-[#642D42] hover:bg-[#522435] text-[#F8F5EF] border border-[#C6A66B]/30 font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer"
                       >
                         <span>Apply on Official Portal</span>
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -2723,25 +2723,25 @@ export default function ScholarsSathi() {
           onClick={() => { soundFx.play('modalClose'); setAuthModal({ ...authModal, open: false }); }}
         >
           <div
-            className="bg-white dark:bg-[#142238] rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-[#1F324E] p-6 sm:p-8 relative my-auto text-[#263449] dark:text-slate-100"
+            className="bg-white dark:bg-[#172439] rounded-2xl max-w-lg w-full shadow-2xl border border-[#C6A66B]/20 dark:border-[#263852] p-6 sm:p-8 relative my-auto text-[#25282D] dark:text-[#F8F5EF]"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => { soundFx.play('modalClose'); setAuthModal({ ...authModal, open: false }); }}
-              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#EEE7DA]/60 dark:bg-[#121E31] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
 
             {/* Login / Register Tab Switcher */}
-            <div className="flex gap-1.5 p-1 bg-slate-100 dark:bg-[#0F1A2E] rounded-xl mb-6 w-fit border border-slate-200 dark:border-[#1F324E]">
+            <div className="flex gap-1.5 p-1 bg-[#EEE7DA]/60 dark:bg-[#121E31] rounded-xl mb-6 w-fit border border-[#C6A66B]/20 dark:border-[#263852]">
               <button
                 type="button"
                 onClick={() => (() => { soundFx.play('modalOpen'); setAuthModal({ open: true, tab: 'login' }); })()}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                   authModal.tab === 'login'
-                    ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                    ? 'bg-white dark:bg-[#1B2B47] text-[#101B2D] dark:text-[#F8F5EF] shadow-xs'
                     : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -2752,7 +2752,7 @@ export default function ScholarsSathi() {
                 onClick={() => (() => { soundFx.play('modalOpen'); setAuthModal({ open: true, tab: 'register' }); })()}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                   authModal.tab === 'register'
-                    ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                    ? 'bg-white dark:bg-[#1B2B47] text-[#101B2D] dark:text-[#F8F5EF] shadow-xs'
                     : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -2763,12 +2763,12 @@ export default function ScholarsSathi() {
             {authModal.tab === 'login' ? (
               <form onSubmit={handleLoginSubmit} className="space-y-4">
                 <div>
-                  <h3 className="text-xl font-extrabold text-[#142B4A] dark:text-white">
+                  <h3 className="font-serif text-xl font-bold text-[#101B2D] dark:text-[#F8F5EF]">
                     Sign In to Scholars Sathi
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Connects to backend route:{' '}
-                    <code className="bg-slate-100 dark:bg-[#0F1A2E] px-1 py-0.5 rounded text-[#356AE6]">
+                    <code className="bg-[#EEE7DA]/60 dark:bg-[#121E31] px-1 py-0.5 rounded text-[#642D42] dark:text-[#C6A66B]">
                       /auth/login
                     </code>
                   </p>
@@ -2802,7 +2802,7 @@ export default function ScholarsSathi() {
 
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-md transition cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-[#642D42] hover:bg-[#522435] text-[#F8F5EF] border border-[#C6A66B]/30 font-bold text-xs shadow-md transition cursor-pointer"
                 >
                   Sign In & Load Matched Schemes
                 </button>
@@ -2810,12 +2810,12 @@ export default function ScholarsSathi() {
             ) : (
               <form onSubmit={handleRegisterSubmit} className="space-y-3">
                 <div>
-                  <h3 className="text-xl font-extrabold text-[#142B4A] dark:text-white">
+                  <h3 className="font-serif text-xl font-bold text-[#101B2D] dark:text-[#F8F5EF]">
                     Create Student Profile
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Connects to backend route:{' '}
-                    <code className="bg-slate-100 dark:bg-[#0F1A2E] px-1 py-0.5 rounded text-[#356AE6]">
+                    <code className="bg-[#EEE7DA]/60 dark:bg-[#121E31] px-1 py-0.5 rounded text-[#642D42] dark:text-[#C6A66B]">
                       /auth/register
                     </code>
                   </p>
@@ -2855,7 +2855,7 @@ export default function ScholarsSathi() {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Citizenship Status
                   </label>
-                  <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-[#0F1A2E]">
+                  <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-[#EEE7DA]/60 dark:bg-[#121E31]">
                     <button
                       type="button"
                       onClick={() =>
@@ -2868,7 +2868,7 @@ export default function ScholarsSathi() {
                       }
                       className={`py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                         registerForm.nationality === 'Indian'
-                          ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                          ? 'bg-white dark:bg-[#1B2B47] text-[#101B2D] dark:text-[#F8F5EF] shadow-xs'
                           : 'text-slate-600 dark:text-slate-400'
                       }`}
                     >
@@ -2886,7 +2886,7 @@ export default function ScholarsSathi() {
                       }
                       className={`py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                         registerForm.nationality === 'International'
-                          ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                          ? 'bg-white dark:bg-[#1B2B47] text-[#101B2D] dark:text-[#F8F5EF] shadow-xs'
                           : 'text-slate-600 dark:text-slate-400'
                       }`}
                     >
@@ -3030,7 +3030,7 @@ export default function ScholarsSathi() {
 
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-md transition cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-[#642D42] hover:bg-[#522435] text-[#F8F5EF] border border-[#C6A66B]/30 font-bold text-xs shadow-md transition cursor-pointer"
                 >
                   Register Account & Recalculate
                 </button>
@@ -3049,18 +3049,18 @@ export default function ScholarsSathi() {
           onClick={() => { soundFx.play('modalClose'); setProfileModalOpen(false); }}
         >
           <div
-            className="bg-white dark:bg-[#142238] rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-[#1F324E] p-6 sm:p-8 relative text-[#263449] dark:text-slate-100"
+            className="bg-white dark:bg-[#172439] rounded-2xl max-w-lg w-full shadow-2xl border border-[#C6A66B]/20 dark:border-[#263852] p-6 sm:p-8 relative text-[#25282D] dark:text-[#F8F5EF]"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => { soundFx.play('modalClose'); setProfileModalOpen(false); }}
-              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#EEE7DA]/60 dark:bg-[#121E31] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <h3 className="text-xl font-extrabold text-[#142B4A] dark:text-white mb-1">
+            <h3 className="font-serif text-xl font-bold text-[#101B2D] dark:text-[#F8F5EF] mb-1">
               Edit Academic & Financial Profile
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
@@ -3073,7 +3073,7 @@ export default function ScholarsSathi() {
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Residency Status
                 </label>
-                <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-[#0F1A2E]">
+                <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-[#EEE7DA]/60 dark:bg-[#121E31]">
                   <button
                     type="button"
                     onClick={() =>
@@ -3087,7 +3087,7 @@ export default function ScholarsSathi() {
                     }
                     className={`py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
                       profileForm.nationality === 'Indian'
-                        ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                        ? 'bg-white dark:bg-[#1B2B47] text-[#101B2D] dark:text-[#F8F5EF] shadow-xs'
                         : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
@@ -3105,7 +3105,7 @@ export default function ScholarsSathi() {
                     }
                     className={`py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
                       profileForm.nationality === 'International'
-                        ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                        ? 'bg-white dark:bg-[#1B2B47] text-[#101B2D] dark:text-[#F8F5EF] shadow-xs'
                         : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
@@ -3221,7 +3221,7 @@ export default function ScholarsSathi() {
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-md transition cursor-pointer"
+                className="w-full py-3 rounded-xl bg-[#642D42] hover:bg-[#522435] text-[#F8F5EF] border border-[#C6A66B]/30 font-bold text-xs shadow-md transition cursor-pointer"
               >
                 Save Profile & Recalculate ML Scores
               </button>
@@ -3239,23 +3239,23 @@ export default function ScholarsSathi() {
           onClick={() => { soundFx.play('modalClose'); setApiConfigModalOpen(false); }}
         >
           <div
-            className="bg-white dark:bg-[#142238] rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 dark:border-[#1F324E] p-6 sm:p-8 relative text-[#263449] dark:text-slate-100"
+            className="bg-white dark:bg-[#172439] rounded-2xl max-w-xl w-full shadow-2xl border border-[#C6A66B]/20 dark:border-[#263852] p-6 sm:p-8 relative text-[#25282D] dark:text-[#F8F5EF]"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => { soundFx.play('modalClose'); setApiConfigModalOpen(false); }}
-              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#EEE7DA]/60 dark:bg-[#121E31] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
 
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-[#356AE6]/10 text-[#356AE6] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[#356AE6]/10 text-[#642D42] dark:text-[#C6A66B] flex items-center justify-center">
                 <Server className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-xl font-extrabold text-[#142B4A] dark:text-white">
+                <h3 className="font-serif text-xl font-bold text-[#101B2D] dark:text-[#F8F5EF]">
                   Backend & ML Model Endpoints
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -3298,8 +3298,8 @@ export default function ScholarsSathi() {
                 </p>
               </div>
 
-              <div className="bg-slate-50 dark:bg-[#0F1A2E] p-3.5 rounded-xl border border-slate-200 dark:border-[#1F324E] text-xs text-slate-600 dark:text-slate-300">
-                <strong className="text-[#142B4A] dark:text-white">Active Response Protocol:</strong>
+              <div className="bg-[#EEE7DA]/40 dark:bg-[#121E31] p-3.5 rounded-xl border border-[#C6A66B]/20 dark:border-[#263852] text-xs text-slate-600 dark:text-slate-300">
+                <strong className="text-[#101B2D] dark:text-[#F8F5EF]">Active Response Protocol:</strong>
                 <pre className="mt-1.5 text-[11px] overflow-x-auto text-slate-800 dark:text-slate-300 font-mono">
                   {`{ "predictions": [{ "scholarshipId": 1, "matchScore": 94, "status": "ELIGIBLE", "aiReason": "..." }] }`}
                 </pre>
@@ -3307,7 +3307,7 @@ export default function ScholarsSathi() {
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-md transition cursor-pointer"
+                className="w-full py-3 rounded-xl bg-[#642D42] hover:bg-[#522435] text-[#F8F5EF] border border-[#C6A66B]/30 font-bold text-xs shadow-md transition cursor-pointer"
               >
                 Save Endpoints & Connect
               </button>
@@ -3319,7 +3319,7 @@ export default function ScholarsSathi() {
       {/* =================================================================== */}
       {/* GOVERNMENT-TECH & EDTECH FOOTER                                     */}
       {/* =================================================================== */}
-      <footer className="mt-auto bg-[#142B4A] text-slate-300 border-t border-slate-800">
+      <footer className="mt-auto bg-[#101B2D] text-slate-300 border-t border-[#C6A66B]/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-white/10 text-xs">
             {/* Col 1: Identity */}
@@ -3471,7 +3471,7 @@ export default function ScholarsSathi() {
                 Email:{' '}
                 <a
                   href="mailto:helpdesk@nsp.gov.in"
-                  className="text-[#356AE6] hover:underline"
+                  className="text-[#642D42] dark:text-[#C6A66B] hover:underline"
                 >
                   helpdesk@nsp.gov.in
                 </a>

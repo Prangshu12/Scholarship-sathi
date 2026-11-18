@@ -31,9 +31,11 @@ import {
 // ============================================================================
 // 1. API INTEGRATION CONFIGURATION LAYER (BACKEND & ML MODEL API ENDPOINTS)
 // ============================================================================
+const API_HOST = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '');
+
 const DEFAULT_API_CONFIG = {
-  BACKEND_BASE_URL: 'http://localhost:5000/api',
-  ML_API_BASE_URL: 'http://localhost:5000/ml',
+  BACKEND_BASE_URL: `${API_HOST}/api`,
+  ML_API_BASE_URL: `${API_HOST}/ml`,
   USE_MOCK_FALLBACK: true,
   ENDPOINTS: {
     LOGIN: '/auth/login',

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   GraduationCap,
   Search,
@@ -10,7 +10,6 @@ import {
   User,
   UserPlus,
   UserCheck,
-  LayoutDashboard,
   IndianRupee,
   SlidersHorizontal,
   FileText,
@@ -19,13 +18,17 @@ import {
   X,
   RefreshCw,
   Compass,
-  FileCheck2,
   Plug,
   Cpu,
   Server,
   Bot,
   Globe,
-  ArrowRight
+  ArrowRight,
+  ArrowLeft,
+  Sun,
+  Moon,
+  Building2,
+  Clock
 } from 'lucide-react';
 
 // ============================================================================
@@ -318,12 +321,6 @@ const DEFAULT_SCHOLARSHIPS = [
 // ============================================================================
 // 3. LOCAL ELIGIBILITY & AI EXPLANATION FALLBACK ENGINE
 // ============================================================================
-/**
- * Evaluates student eligibility locally whenever the external Python ML API
- * is unreachable. Dynamically adapts criteria based on residency:
- * - Indian Citizen: evaluates Social Category, State Domicile, Income, Marks, Course.
- * - Outside India: waives Social Category and evaluates International eligibility.
- */
 function localRuleFallbackEngine(student, sch) {
   const isIndian = (student.nationality || 'Indian') === 'Indian';
   const natPass = sch.allowedNationalities.includes(student.nationality || 'Indian');
@@ -419,6 +416,34 @@ function localRuleFallbackEngine(student, sch) {
 // 4. MAIN SCHOLARS SATHI REACT APPLICATION
 // ============================================================================
 export default function ScholarsSathi() {
+  // Theme State: Dark Mode (Requirement 1)
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ss_theme');
+      if (saved) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch {
+      return false;
+    }
+  });
+
+  // Sync theme with HTML class
+  useEffect(() => {
+    try {
+      if (darkMode) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('ss_theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('ss_theme', 'light');
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, [darkMode]);
+
+  const toggleDarkMode = () => setDarkMode((prev) => !prev);
+
   // View & Responsive Navigation State
   const [activeView, setActiveView] = useState('home'); // 'home' | 'dashboard'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -500,6 +525,7 @@ export default function ScholarsSathi() {
   const [searchQuery, setSearchQuery] = useState('');
   const [eligibilityFilter, setEligibilityFilter] = useState('ALL');
   const [providerFilter, setProviderFilter] = useState('ALL');
+  const [categoryQuickFilter, setCategoryQuickFilter] = useState('ALL'); // 'ALL' | 'Central Govt' | 'State Govt' | 'Corporate CSR' | 'International' | 'CLOSING_SOON' | 'HIGH_VALUE'
   const [sortBy, setSortBy] = useState('SCORE');
 
   // Modal States
@@ -518,6 +544,7 @@ export default function ScholarsSathi() {
     email: 'rohan.das@student.edu.in',
     password: 'student123'
   });
+
   const [registerForm, setRegisterForm] = useState({
     name: '',
     email: '',
@@ -596,7 +623,7 @@ export default function ScholarsSathi() {
     );
 
     if (mlRes.ok && mlRes.data && Array.isArray(mlRes.data.predictions)) {
-      setApiStatus({ label: 'ML API Connected', color: 'emerald' });
+      setApiStatus({ label: 'ML Model API Connected', color: 'emerald' });
       const merged = rawScholarships.map((sch) => {
         const pred = mlRes.data.predictions.find((p) => p.scholarshipId === sch.id);
         return {
@@ -617,6 +644,7 @@ export default function ScholarsSathi() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshAllData(currentUser, apiConfig);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -844,14 +872,37 @@ export default function ScholarsSathi() {
   const filteredScholarships = useMemo(() => {
     return enrichedScholarships
       .filter((s) => {
+        // Text Search
         const matchesSearch =
           s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          s.ministry.toLowerCase().includes(searchQuery.toLowerCase());
+          s.ministry.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          s.provider.toLowerCase().includes(searchQuery.toLowerCase());
+
+        // Eligibility Status Dropdown Filter
         const matchesStatus =
           eligibilityFilter === 'ALL' || s.mlResult?.status === eligibilityFilter;
+
+        // Provider Dropdown Filter
         const matchesProvider =
           providerFilter === 'ALL' || s.provider === providerFilter;
-        return matchesSearch && matchesStatus && matchesProvider;
+
+        // Quick Category Filter Bar
+        let matchesQuickCategory = true;
+        if (categoryQuickFilter === 'Central Govt') {
+          matchesQuickCategory = s.provider === 'Central Govt';
+        } else if (categoryQuickFilter === 'State Govt') {
+          matchesQuickCategory = s.provider === 'State Govt';
+        } else if (categoryQuickFilter === 'Corporate CSR') {
+          matchesQuickCategory = s.provider === 'Corporate CSR';
+        } else if (categoryQuickFilter === 'International') {
+          matchesQuickCategory = s.provider === 'International';
+        } else if (categoryQuickFilter === 'CLOSING_SOON') {
+          matchesQuickCategory = s.deadlineDays <= 30;
+        } else if (categoryQuickFilter === 'HIGH_VALUE') {
+          matchesQuickCategory = s.amount >= 50000;
+        }
+
+        return matchesSearch && matchesStatus && matchesProvider && matchesQuickCategory;
       })
       .sort((a, b) => {
         if (sortBy === 'SCORE')
@@ -860,64 +911,100 @@ export default function ScholarsSathi() {
         if (sortBy === 'AMOUNT') return b.amount - a.amount;
         return 0;
       });
-  }, [enrichedScholarships, searchQuery, eligibilityFilter, providerFilter, sortBy]);
+  }, [enrichedScholarships, searchQuery, eligibilityFilter, providerFilter, categoryQuickFilter, sortBy]);
 
   const checklistReadyCount = useMemo(
     () => PRACTICAL_CHECKLIST.filter((item) => checklistState[item.id]).length,
     [checklistState]
   );
 
+  const resetFilters = () => {
+    setSearchQuery('');
+    setEligibilityFilter('ALL');
+    setProviderFilter('ALL');
+    setCategoryQuickFilter('ALL');
+    setSortBy('SCORE');
+  };
+
+  const hasActiveFilters =
+    searchQuery !== '' ||
+    eligibilityFilter !== 'ALL' ||
+    providerFilter !== 'ALL' ||
+    categoryQuickFilter !== 'ALL' ||
+    sortBy !== 'SCORE';
+
   // ==========================================================================
-  // RENDER UI
+  // RENDER UI: MODERN EDTECH + GOVERNMENT-TECH MINIMALISM
+  // Primary: #142B4A | Secondary: #356AE6 | Accent: #F4A340
+  // Background: #F7F9FC / Dark: #0B132B | Text: #263449 / Dark: #E2E8F0
   // ==========================================================================
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 antialiased selection:bg-indigo-600 selection:text-white flex flex-col">
+    <div className="min-h-screen bg-[#F7F9FC] dark:bg-[#0B132B] text-[#263449] dark:text-[#E2E8F0] font-sans antialiased flex flex-col selection:bg-[#356AE6] selection:text-white transition-colors duration-200">
       {/* =================================================================== */}
-      {/* TOP NAVIGATION BAR                                                  */}
+      {/* TOP GOVERNMENT-TECH & EDTECH NAVIGATION BAR                         */}
       {/* =================================================================== */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          {/* Brand Logo */}
-          <button
-            type="button"
-            onClick={() => setActiveView('home')}
-            className="flex items-center gap-3 text-left cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-200">
-              <GraduationCap className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-xl font-extrabold tracking-tight text-slate-900">
-                Scholars <span className="text-indigo-600">Sathi</span>
-              </span>
-              <span className="hidden sm:inline-block ml-2 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
-                AI + ML Portal
-              </span>
-            </div>
-          </button>
-
-          {/* Center Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
+      <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#0E1726]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-[#1F324E] shadow-[0_1px_3px_rgba(20,43,74,0.04)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-17 flex items-center justify-between gap-4">
+          {/* Brand Logo & GovTech Emblem */}
+          <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => setActiveView('home')}
-              className={`transition cursor-pointer ${
-                activeView === 'home' ? 'text-indigo-600 font-bold' : 'hover:text-indigo-600'
+              onClick={() => {
+                setActiveView('home');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="flex items-center gap-3 text-left cursor-pointer group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#142B4A] dark:bg-[#356AE6] flex items-center justify-center text-white shadow-xs group-hover:bg-[#356AE6] dark:group-hover:bg-[#2857C7] transition-colors duration-200">
+                <GraduationCap className="w-6 h-6 text-[#F4A340] group-hover:text-white transition-colors" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-extrabold tracking-tight text-[#142B4A] dark:text-white">
+                    Scholarship <span className="text-[#356AE6]">Sathi</span>
+                  </span>
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#142B4A]/5 dark:bg-white/10 text-[#142B4A] dark:text-slate-300 border border-slate-200 dark:border-white/10">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#F4A340]"></span>
+                    Gov-Tech + AI
+                  </span>
+                </div>
+                <p className="hidden md:block text-[11px] font-medium text-slate-500 dark:text-slate-400 -mt-0.5">
+                  National Scholarship Portal & Direct Benefit Transfer Portal
+                </p>
+              </div>
+            </button>
+          </div>
+
+          {/* Center Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-1 text-sm font-semibold">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveView('home');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`px-3 py-2 rounded-lg transition-colors cursor-pointer ${
+                activeView === 'home'
+                  ? 'text-[#356AE6] bg-[#356AE6]/10 font-bold dark:bg-[#356AE6]/20'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#142238]'
               }`}
             >
-              Home
+              Overview
             </button>
             <button
               type="button"
-              onClick={() => setActiveView('dashboard')}
-              className={`transition flex items-center gap-1.5 cursor-pointer ${
+              onClick={() => {
+                setActiveView('dashboard');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 cursor-pointer ${
                 activeView === 'dashboard'
-                  ? 'text-indigo-600 font-bold'
-                  : 'hover:text-indigo-600'
+                  ? 'text-[#356AE6] bg-[#356AE6]/10 font-bold dark:bg-[#356AE6]/20'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#142238]'
               }`}
             >
               <span>Scholarship Explorer</span>
-              <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+              <span className="bg-[#F4A340]/15 dark:bg-[#F4A340]/25 text-[#D97706] dark:text-[#F4A340] text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
                 {enrichedScholarships.length || DEFAULT_SCHOLARSHIPS.length} Live
               </span>
             </button>
@@ -929,11 +1016,11 @@ export default function ScholarsSathi() {
                   document
                     .getElementById('practical-toolkit')
                     ?.scrollIntoView({ behavior: 'smooth' });
-                }, 60);
+                }, 80);
               }}
-              className="hover:text-indigo-600 transition cursor-pointer"
+              className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#142238] transition-colors cursor-pointer"
             >
-              Document Checklist
+              DBT Checklist
             </button>
             <button
               type="button"
@@ -944,79 +1031,115 @@ export default function ScholarsSathi() {
                 });
                 setApiConfigModalOpen(true);
               }}
-              className="text-xs font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200/70 px-2.5 py-1.5 rounded-lg border border-slate-200 transition cursor-pointer"
+              className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-[#142B4A] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#142238] flex items-center gap-1.5 transition-colors cursor-pointer"
               title="Configure Backend & ML Model API URLs"
             >
-              <Plug className="w-3.5 h-3.5 text-indigo-600" />
-              <span>API Config</span>
+              <Plug className="w-3.5 h-3.5 text-[#356AE6]" />
+              <span>API Integrations</span>
             </button>
           </nav>
 
-          {/* Right Auth Controls */}
-          <div className="hidden sm:flex items-center gap-2.5">
+          {/* Right Controls: Dark Mode Toggle, Auth & Profile */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Dark Mode Toggle Button (Requirement 1) */}
+            <button
+              type="button"
+              onClick={toggleDarkMode}
+              className="p-2.5 rounded-xl border border-slate-200 dark:border-[#1F324E] bg-white dark:bg-[#142238] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1B2B47] transition-all cursor-pointer shadow-xs"
+              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {darkMode ? (
+                <Sun className="w-4 h-4 text-[#F4A340] animate-in spin-in-180" />
+              ) : (
+                <Moon className="w-4 h-4 text-[#142B4A]" />
+              )}
+            </button>
+
+            {/* Back Button in Header for Instant Quick Return */}
+            {activeView === 'dashboard' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveView('home');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-[#142B4A] dark:text-slate-200 bg-slate-100 dark:bg-[#142238] hover:bg-slate-200 dark:hover:bg-[#1B2B47] border border-slate-200 dark:border-[#1F324E] transition cursor-pointer"
+                title="Back to Overview / Home"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-[#356AE6]" />
+                <span>Overview</span>
+              </button>
+            )}
+
+            {/* Auth Controls */}
             {currentUser.isAuthenticated ? (
-              <>
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setActiveView('dashboard')}
-                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-xs border border-indigo-200 cursor-pointer"
+                  onClick={openEditProfileModal}
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#356AE6]/10 dark:bg-[#356AE6]/20 text-[#356AE6] dark:text-blue-300 font-bold text-xs border border-[#356AE6]/30 hover:bg-[#356AE6]/20 transition cursor-pointer"
                 >
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span>{currentUser.name}</span>
+                  <User className="w-3.5 h-3.5" />
+                  <span className="max-w-[120px] truncate">{currentUser.name}</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer"
+                  className="px-3 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition cursor-pointer"
                 >
                   Logout
                 </button>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="hidden sm:flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setAuthModal({ open: true, tab: 'login' })}
-                  className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-bold text-[#142B4A] dark:text-slate-200 hover:text-[#356AE6] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#142238] rounded-xl transition cursor-pointer"
                 >
-                  Login
+                  Sign In
                 </button>
                 <button
                   type="button"
                   onClick={() => setAuthModal({ open: true, tab: 'register' })}
-                  className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs shadow-indigo-200 transition flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#356AE6] hover:bg-[#2857C7] rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                 >
-                  <UserPlus className="w-4 h-4" />
+                  <UserPlus className="w-3.5 h-3.5" />
                   <span>Register</span>
                 </button>
-              </>
+              </div>
             )}
-          </div>
 
-          {/* Mobile Menu Toggle */}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100"
-            aria-label="Toggle Menu"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+            {/* Mobile Menu Toggle */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#142238] border border-slate-200 dark:border-[#1F324E]"
+              aria-label="Toggle Menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-200 px-4 py-4 space-y-3 shadow-lg">
-            <div className="flex flex-col space-y-2 text-sm font-semibold text-slate-700">
+          <div className="lg:hidden bg-white dark:bg-[#0E1726] border-t border-slate-200 dark:border-[#1F324E] px-4 py-4 space-y-3 shadow-xl">
+            <div className="flex flex-col space-y-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
               <button
                 type="button"
                 onClick={() => {
                   setActiveView('home');
                   setMobileMenuOpen(false);
                 }}
-                className="text-left py-2 px-3 rounded-lg hover:bg-slate-50"
+                className={`text-left py-2.5 px-3 rounded-lg flex items-center gap-2 ${
+                  activeView === 'home'
+                    ? 'bg-[#356AE6]/10 text-[#356AE6] font-bold'
+                    : 'hover:bg-slate-50 dark:hover:bg-[#142238]'
+                }`}
               >
-                Home
+                <span>Overview & Eligibility</span>
               </button>
               <button
                 type="button"
@@ -1024,9 +1147,31 @@ export default function ScholarsSathi() {
                   setActiveView('dashboard');
                   setMobileMenuOpen(false);
                 }}
-                className="text-left py-2 px-3 rounded-lg hover:bg-slate-50"
+                className={`text-left py-2.5 px-3 rounded-lg flex items-center justify-between ${
+                  activeView === 'dashboard'
+                    ? 'bg-[#356AE6]/10 text-[#356AE6] font-bold'
+                    : 'hover:bg-slate-50 dark:hover:bg-[#142238]'
+                }`}
               >
-                Scholarship Explorer
+                <span>Scholarship Explorer</span>
+                <span className="text-[10px] font-bold bg-[#F4A340]/20 text-[#D97706] dark:text-[#F4A340] px-2 py-0.5 rounded-full">
+                  {enrichedScholarships.length} Live
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveView('home');
+                  setMobileMenuOpen(false);
+                  setTimeout(() => {
+                    document
+                      .getElementById('practical-toolkit')
+                      ?.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }}
+                className="text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-[#142238]"
+              >
+                DBT Document Checklist
               </button>
               <button
                 type="button"
@@ -1038,23 +1183,37 @@ export default function ScholarsSathi() {
                   setApiConfigModalOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className="text-left py-2 px-3 rounded-lg hover:bg-slate-50 text-indigo-600"
+                className="text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-[#142238] text-[#356AE6] flex items-center gap-2"
               >
-                Configure Backend & ML API
+                <Plug className="w-4 h-4" />
+                <span>Backend & ML API Config</span>
               </button>
             </div>
-            <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2">
+
+            <div className="pt-3 border-t border-slate-100 dark:border-[#1F324E] grid grid-cols-2 gap-2">
               {currentUser.isAuthenticated ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="col-span-2 py-2.5 rounded-xl bg-rose-50 text-rose-700 text-xs font-bold"
-                >
-                  Logout ({currentUser.name})
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      openEditProfileModal();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="py-2.5 rounded-xl bg-[#356AE6]/10 text-[#356AE6] text-xs font-bold"
+                  >
+                    Edit Profile
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 text-xs font-bold"
+                  >
+                    Logout
+                  </button>
+                </>
               ) : (
                 <>
                   <button
@@ -1063,9 +1222,9 @@ export default function ScholarsSathi() {
                       setAuthModal({ open: true, tab: 'login' });
                       setMobileMenuOpen(false);
                     }}
-                    className="py-2.5 rounded-xl border border-slate-300 text-slate-800 text-xs font-bold"
+                    className="py-2.5 rounded-xl border border-slate-300 dark:border-[#1F324E] text-[#142B4A] dark:text-slate-200 text-xs font-bold"
                   >
-                    Login
+                    Sign In
                   </button>
                   <button
                     type="button"
@@ -1073,7 +1232,7 @@ export default function ScholarsSathi() {
                       setAuthModal({ open: true, tab: 'register' });
                       setMobileMenuOpen(false);
                     }}
-                    className="py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold"
+                    className="py-2.5 rounded-xl bg-[#356AE6] text-white text-xs font-bold"
                   >
                     Register
                   </button>
@@ -1085,113 +1244,118 @@ export default function ScholarsSathi() {
       </header>
 
       {/* =================================================================== */}
-      {/* VIEW 1: DEFAULT HOME LANDING PAGE                                   */}
+      {/* VIEW 1: HOME OVERVIEW & INSTANT ELIGIBILITY CHECKER                 */}
       {/* =================================================================== */}
       {activeView === 'home' && (
         <main className="flex-1">
-          {/* HERO BANNER */}
-          <section
-            className="text-white relative overflow-hidden"
-            style={{
-              background:
-                'radial-gradient(circle at top right, #4f46e5 0%, #1e1b4b 45%, #0f172a 100%)'
-            }}
-          >
+          {/* HERO BANNER: Deep Navy Blue (#142B4A) + Warm Saffron Accents */}
+          <section className="relative overflow-hidden bg-[#142B4A] text-white border-b border-slate-800">
+            {/* Subtle Minimalist Grid Pattern */}
             <div
-              className="absolute inset-0 opacity-15 pointer-events-none"
+              className="absolute inset-0 opacity-10 pointer-events-none"
               style={{
-                backgroundImage: 'radial-gradient(#a5b4fc 1px, transparent 1px)',
-                backgroundSize: '24px 24px'
+                backgroundImage: 'radial-gradient(#F4A340 1px, transparent 1px)',
+                backgroundSize: '28px 28px'
               }}
             />
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-22 relative z-10">
-              <div className="grid lg:grid-cols-12 gap-12 items-center">
-                {/* Left Hero Copy & CTA Buttons */}
+            {/* Ambient Lighting */}
+            <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#356AE6]/15 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20 relative z-10">
+              <div className="grid lg:grid-cols-12 gap-10 items-center">
+                {/* Left Hero Copy & Mission */}
                 <div className="lg:col-span-7 space-y-6">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-indigo-200 text-xs font-semibold backdrop-blur-xs">
-                    <Sparkles className="w-4 h-4 text-amber-300" />
-                    <span>Smart ML Eligibility Engine & Automated Deadline Alerts</span>
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-slate-200 text-xs font-semibold backdrop-blur-xs">
+                    <span className="w-2 h-2 rounded-full bg-[#F4A340] animate-pulse"></span>
+                    <span className="text-[#F4A340] font-bold">Government-Tech Initiative</span>
+                    <span className="text-white/40">|</span>
+                    <span>AI-Driven Eligibility & DBT Verification</span>
                   </div>
 
-                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
-                    Never Miss a Scholarship You{' '}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-300 to-indigo-300">
-                      Actually Deserve.
-                    </span>
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.15]">
+                    Discover & Claim Every Scholarship You{' '}
+                    <span className="text-[#F4A340]">Actually Qualify For.</span>
                   </h1>
 
-                  <p className="text-lg text-slate-300 max-w-2xl leading-relaxed">
-                    Scholars Sathi matches your academic marks, family income, state or
-                    international residency, and course against verified central, state, CSR, and
-                    global scholarships—complete with AI explanations so you apply with confidence.
+                  <p className="text-base sm:text-lg text-slate-300 max-w-2xl leading-relaxed">
+                    Scholarship Sathi bridges students with National Scholarship Portal (NSP), State
+                    welfare boards, Corporate CSR grants, and global merit schemes. Instant ML
+                    scoring eliminates guesswork and ensures zero missed deadlines.
                   </p>
 
-                  {/* Hero Banner Action Buttons */}
-                  <div className="flex flex-wrap items-center gap-4 pt-2">
+                  {/* Call to Actions */}
+                  <div className="flex flex-wrap items-center gap-3.5 pt-2">
                     <button
                       type="button"
-                      onClick={() => setActiveView('dashboard')}
-                      className="px-7 py-4 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-base shadow-xl shadow-amber-500/20 transition transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer"
+                      onClick={() => {
+                        setActiveView('dashboard');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="px-6 py-3.5 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-sm shadow-md transition-all transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer"
                     >
-                      <Compass className="w-5 h-5" />
+                      <Compass className="w-4 h-4" />
                       <span>Explore Scholarships</span>
+                      <ArrowRight className="w-4 h-4 ml-1" />
                     </button>
                     <button
                       type="button"
                       onClick={() => setAuthModal({ open: true, tab: 'register' })}
-                      className="px-7 py-4 rounded-2xl bg-white/15 hover:bg-white/25 text-white border border-white/30 font-bold text-base backdrop-blur-md transition flex items-center gap-2 cursor-pointer"
+                      className="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-sm transition cursor-pointer flex items-center gap-2"
                     >
-                      <UserCheck className="w-5 h-5" />
-                      <span>Register Free</span>
+                      <UserCheck className="w-4 h-4 text-[#F4A340]" />
+                      <span>Create Student Account</span>
                     </button>
                   </div>
 
-                  {/* Trust Metrics */}
+                  {/* Trust Metrics Bar */}
                   <div className="grid grid-cols-3 gap-6 pt-6 border-t border-white/15 max-w-lg">
                     <div>
                       <p className="text-2xl font-extrabold text-white">₹4.8 Cr+</p>
-                      <p className="text-xs text-slate-400">Active Grants Listed</p>
+                      <p className="text-xs text-slate-300 font-medium mt-0.5">Disbursed Schemes</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-extrabold text-amber-300">96.4%</p>
-                      <p className="text-xs text-slate-400">ML Match Precision</p>
+                      <p className="text-2xl font-extrabold text-[#F4A340]">96.4%</p>
+                      <p className="text-xs text-slate-300 font-medium mt-0.5">ML Match Precision</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-extrabold text-emerald-300">Zero Fee</p>
-                      <p className="text-xs text-slate-400">Direct Portal Links</p>
+                      <p className="text-2xl font-extrabold text-emerald-400">100% Free</p>
+                      <p className="text-xs text-slate-300 font-medium mt-0.5">Direct Official Portals</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Instant Eligibility Check Card (Conditional Indian vs Outside India) */}
+                {/* Right Hero Card: Instant Eligibility Check */}
                 <div className="lg:col-span-5">
-                  <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 sm:p-8 shadow-2xl">
-                    <div className="flex items-center justify-between mb-5">
+                  <div className="bg-white dark:bg-[#142238] text-[#263449] dark:text-slate-100 rounded-2xl p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-[#1F324E]">
+                    <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-100 dark:border-[#1F324E]">
                       <div>
-                        <h2 className="text-xl font-bold text-white">Instant Eligibility Check</h2>
-                        <p className="text-xs text-indigo-200">
-                          Test your profile in 10 seconds without signing up
-                        </p>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#356AE6] uppercase tracking-wider">
+                          <Cpu className="w-3.5 h-3.5" />
+                          <span>Instant Eligibility Check</span>
+                        </div>
+                        <h2 className="text-lg font-bold text-[#142B4A] dark:text-white mt-0.5">
+                          Test In 10 Seconds
+                        </h2>
                       </div>
-                      <span className="p-2.5 rounded-xl bg-indigo-500/30 text-amber-300">
-                        <Cpu className="w-6 h-6" />
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#F4A340]/15 text-[#D97706] dark:text-[#F4A340]">
+                        No Login Required
                       </span>
                     </div>
 
-                    <form onSubmit={handleQuickCheckSubmit} className="space-y-4">
+                    <form onSubmit={handleQuickCheckSubmit} className="space-y-3.5">
                       {/* Residency / Nationality Toggle */}
                       <div>
-                        <label className="block text-xs font-semibold text-indigo-200 mb-1.5">
-                          Nationality / Residency Status
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Citizenship / Residency
                         </label>
-                        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-950/70 border border-white/15">
+                        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E]">
                           <button
                             type="button"
                             onClick={() => handleQuickNationalityChange('Indian')}
                             className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                               quickCheck.nationality === 'Indian'
-                                ? 'bg-amber-400 text-slate-950 shadow-sm'
-                                : 'text-slate-300 hover:text-white'
+                                ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                             }`}
                           >
                             <span>🇮🇳 Indian Citizen</span>
@@ -1201,21 +1365,21 @@ export default function ScholarsSathi() {
                             onClick={() => handleQuickNationalityChange('International')}
                             className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                               quickCheck.nationality === 'International'
-                                ? 'bg-amber-400 text-slate-950 shadow-sm'
-                                : 'text-slate-300 hover:text-white'
+                                ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                             }`}
                           >
-                            <Globe className="w-3.5 h-3.5" />
+                            <Globe className="w-3.5 h-3.5 text-[#356AE6]" />
                             <span>Outside India</span>
                           </button>
                         </div>
                       </div>
 
-                      {/* Conditional Fields: Indian shows Social Category + Home State; Outside India hides Category */}
+                      {/* Conditional Fields: Indian shows Category + State; Outside India shows Region */}
                       {quickCheck.nationality === 'Indian' ? (
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-2.5">
                           <div>
-                            <label className="block text-xs font-semibold text-indigo-200 mb-1">
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                               Social Category
                             </label>
                             <select
@@ -1223,7 +1387,7 @@ export default function ScholarsSathi() {
                               onChange={(e) =>
                                 setQuickCheck({ ...quickCheck, category: e.target.value })
                               }
-                              className="w-full rounded-xl bg-slate-900/85 border border-white/20 text-white text-sm px-3 py-2.5 focus:outline-none focus:border-amber-400"
+                              className="w-full rounded-xl bg-white dark:bg-[#0F1A2E] border border-slate-300 dark:border-[#1F324E] text-slate-900 dark:text-white text-xs px-3 py-2.5 focus:outline-none focus:border-[#356AE6]"
                             >
                               {INDIAN_CATEGORIES.map((cat) => (
                                 <option key={cat} value={cat}>
@@ -1234,7 +1398,7 @@ export default function ScholarsSathi() {
                           </div>
 
                           <div>
-                            <label className="block text-xs font-semibold text-indigo-200 mb-1">
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                               Home State
                             </label>
                             <select
@@ -1242,7 +1406,7 @@ export default function ScholarsSathi() {
                               onChange={(e) =>
                                 setQuickCheck({ ...quickCheck, state: e.target.value })
                               }
-                              className="w-full rounded-xl bg-slate-900/85 border border-white/20 text-white text-sm px-3 py-2.5 focus:outline-none focus:border-amber-400"
+                              className="w-full rounded-xl bg-white dark:bg-[#0F1A2E] border border-slate-300 dark:border-[#1F324E] text-slate-900 dark:text-white text-xs px-3 py-2.5 focus:outline-none focus:border-[#356AE6]"
                             >
                               {INDIAN_STATES.map((st) => (
                                 <option key={st} value={st}>
@@ -1254,15 +1418,15 @@ export default function ScholarsSathi() {
                         </div>
                       ) : (
                         <div>
-                          <label className="block text-xs font-semibold text-indigo-200 mb-1">
-                            Country / Region (Outside India)
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Geographic Region
                           </label>
                           <select
                             value={quickCheck.state}
                             onChange={(e) =>
                               setQuickCheck({ ...quickCheck, state: e.target.value })
                             }
-                            className="w-full rounded-xl bg-slate-900/85 border border-white/20 text-white text-sm px-3 py-2.5 focus:outline-none focus:border-amber-400"
+                            className="w-full rounded-xl bg-white dark:bg-[#0F1A2E] border border-slate-300 dark:border-[#1F324E] text-slate-900 dark:text-white text-xs px-3 py-2.5 focus:outline-none focus:border-[#356AE6]"
                           >
                             {INTERNATIONAL_REGIONS.map((reg) => (
                               <option key={reg} value={reg}>
@@ -1270,17 +1434,16 @@ export default function ScholarsSathi() {
                               </option>
                             ))}
                           </select>
-                          <p className="text-[11px] text-emerald-300 mt-1">
-                            ✓ Indian caste/category criteria automatically waived for international
-                            applicants.
+                          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1">
+                            ✓ Indian caste reservation waived for international students.
                           </p>
                         </div>
                       )}
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-2.5">
                         <div>
-                          <label className="block text-xs font-semibold text-indigo-200 mb-1">
-                            Annual Income (₹ eq.)
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Annual Family Income (₹)
                           </label>
                           <input
                             type="number"
@@ -1290,12 +1453,12 @@ export default function ScholarsSathi() {
                             onChange={(e) =>
                               setQuickCheck({ ...quickCheck, income: e.target.value })
                             }
-                            className="w-full rounded-xl bg-slate-900/85 border border-white/20 text-white text-sm px-3 py-2.5 focus:outline-none focus:border-amber-400"
+                            className="w-full rounded-xl bg-white dark:bg-[#0F1A2E] border border-slate-300 dark:border-[#1F324E] text-slate-900 dark:text-white text-xs px-3 py-2.5 focus:outline-none focus:border-[#356AE6]"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-indigo-200 mb-1">
-                            Last Exam Marks (%)
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Qualifying Marks (%)
                           </label>
                           <input
                             type="number"
@@ -1306,21 +1469,21 @@ export default function ScholarsSathi() {
                             onChange={(e) =>
                               setQuickCheck({ ...quickCheck, marks: e.target.value })
                             }
-                            className="w-full rounded-xl bg-slate-900/85 border border-white/20 text-white text-sm px-3 py-2.5 focus:outline-none focus:border-amber-400"
+                            className="w-full rounded-xl bg-white dark:bg-[#0F1A2E] border border-slate-300 dark:border-[#1F324E] text-slate-900 dark:text-white text-xs px-3 py-2.5 focus:outline-none focus:border-[#356AE6]"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-indigo-200 mb-1">
-                          Current Course Level
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Academic Course Level
                         </label>
                         <select
                           value={quickCheck.course}
                           onChange={(e) =>
                             setQuickCheck({ ...quickCheck, course: e.target.value })
                           }
-                          className="w-full rounded-xl bg-slate-900/85 border border-white/20 text-white text-sm px-3 py-2.5 focus:outline-none focus:border-amber-400"
+                          className="w-full rounded-xl bg-white dark:bg-[#0F1A2E] border border-slate-300 dark:border-[#1F324E] text-slate-900 dark:text-white text-xs px-3 py-2.5 focus:outline-none focus:border-[#356AE6]"
                         >
                           {COURSES.map((c) => (
                             <option key={c} value={c}>
@@ -1332,10 +1495,10 @@ export default function ScholarsSathi() {
 
                       <button
                         type="submit"
-                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-400 hover:to-violet-400 text-white font-bold text-sm shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full py-3 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-1"
                       >
-                        <Sparkles className="w-4 h-4" />
-                        <span>Run ML Match & View Results</span>
+                        <Sparkles className="w-4 h-4 text-[#F4A340]" />
+                        <span>Run ML Match & View Matching Schemes</span>
                       </button>
                     </form>
                   </div>
@@ -1344,124 +1507,249 @@ export default function ScholarsSathi() {
             </div>
           </section>
 
-          {/* PRACTICAL STUDENT TOOLKIT SECTION */}
-          <section
-            id="practical-toolkit"
-            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
-          >
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+          {/* CENTRAL SCHOLARSHIP DISCOVERY PREVIEW: Top Matched Schemes */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
-                  Daily Student Companion
+                <span className="text-xs font-extrabold uppercase tracking-wider text-[#356AE6]">
+                  Verified Portal Directory
                 </span>
-                <h2 className="text-3xl font-extrabold text-slate-900 mt-1">
-                  Practical Scholarship Readiness Toolkit
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#142B4A] dark:text-white mt-1">
+                  Active Central, State & CSR Scholarships
                 </h2>
-                <p className="text-slate-600 mt-1 max-w-2xl">
-                  Most student applications fail due to missing bank seeding or expired income
-                  certificates—not low marks. Track your readiness below.
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">
+                  Accredited by National Scholarship Portal (NSP), UGC, AICTE, and verified corporate
+                  partners. Click any scheme for an instant AI eligibility breakdown.
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setActiveView('dashboard')}
-                className="text-sm font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                onClick={() => {
+                  setActiveView('dashboard');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white dark:bg-[#142238] border border-slate-200 dark:border-[#1F324E] text-xs font-bold text-[#142B4A] dark:text-white hover:text-[#356AE6] dark:hover:text-[#356AE6] transition cursor-pointer shadow-xs"
               >
-                <span>Go to Full Dashboard</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Browse All {enrichedScholarships.length || DEFAULT_SCHOLARSHIPS.length} Schemes</span>
+                <ArrowRight className="w-3.5 h-3.5 text-[#356AE6]" />
               </button>
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-8">
-              {/* Interactive Document Readiness Checklist */}
-              <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                      <FileCheck2 className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-slate-900">
-                        Document & DBT Readiness Tracker
-                      </h3>
-                      <p className="text-xs text-slate-500">Saved automatically in your browser</p>
-                    </div>
-                  </div>
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">
-                    {checklistReadyCount}/{PRACTICAL_CHECKLIST.length} Ready
-                  </span>
-                </div>
+            {/* Clean, Informative Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {(enrichedScholarships.length ? enrichedScholarships : DEFAULT_SCHOLARSHIPS)
+                .slice(0, 3)
+                .map((sch) => {
+                  const ml = sch.mlResult || localRuleFallbackEngine(currentUser, sch);
+                  const isEligible = ml.status === 'ELIGIBLE';
+                  const isPartial = ml.status === 'PARTIAL';
 
-                <div className="space-y-3">
-                  {PRACTICAL_CHECKLIST.map((item) => {
-                    const checked = !!checklistState[item.id];
-                    return (
-                      <label
-                        key={item.id}
-                        className={`flex items-start gap-3.5 p-3.5 rounded-2xl border cursor-pointer transition ${
-                          checked
-                            ? 'bg-emerald-50/60 border-emerald-200'
-                            : 'bg-slate-50 border-slate-200 hover:border-indigo-300'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleChecklistItem(item.id)}
-                          className="mt-1 w-4 h-4 accent-indigo-600 rounded"
-                        />
-                        <div>
-                          <p
-                            className={`text-sm font-bold ${
-                              checked ? 'text-emerald-900 line-through' : 'text-slate-900'
+                  return (
+                    <div
+                      key={sch.id}
+                      className="bg-white dark:bg-[#142238] rounded-2xl border border-slate-200/90 dark:border-[#1F324E] p-6 shadow-[0_2px_8px_rgba(20,43,74,0.04)] hover:shadow-md hover:border-[#356AE6]/50 dark:hover:border-[#356AE6]/50 transition-all flex flex-col justify-between"
+                    >
+                      <div>
+                        {/* Top Badges */}
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                              isEligible
+                                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                                : isPartial
+                                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                             }`}
                           >
-                            {item.title}
-                          </p>
-                          <p className="text-xs text-slate-600 mt-0.5">{item.desc}</p>
+                            {isEligible ? 'Eligible' : isPartial ? 'Partial Match' : 'Check Criteria'} •{' '}
+                            {ml.matchScore}%
+                          </span>
+
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1 ${
+                              sch.deadlineDays <= 30
+                                ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                            }`}
+                          >
+                            <Clock className="w-3 h-3" />
+                            <span>{sch.deadlineDays}d left</span>
+                          </span>
                         </div>
-                      </label>
-                    );
-                  })}
-                </div>
+
+                        {/* Provider Category & Title */}
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#356AE6]">
+                          {sch.provider}
+                        </span>
+                        <h3 className="text-base font-extrabold text-[#142B4A] dark:text-white mt-1 leading-snug line-clamp-2">
+                          {sch.title}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
+                          <Building2 className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                          <span className="truncate">{sch.ministry}</span>
+                        </p>
+
+                        {/* Grant Amount & Criteria Preview */}
+                        <div className="my-4 p-3 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-100 dark:border-[#1F324E] flex items-center justify-between">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                              Benefit Grant
+                            </span>
+                            <span className="text-lg font-extrabold text-[#142B4A] dark:text-white flex items-center">
+                              <IndianRupee className="w-4 h-4 text-[#356AE6]" />
+                              {sch.amount.toLocaleString('en-IN')}
+                              <span className="text-[11px] font-normal text-slate-500 ml-1">/ yr</span>
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                              Min Marks
+                            </span>
+                            <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                              {sch.minMarks}%
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* ML Insight Snippet */}
+                        <div className="p-3 rounded-xl bg-[#356AE6]/5 dark:bg-[#356AE6]/10 border border-[#356AE6]/15 text-xs text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
+                          <div className="flex items-center gap-1 font-bold text-[#356AE6] mb-0.5">
+                            <Sparkles className="w-3 h-3 text-[#F4A340]" />
+                            <span>AI Eligibility Insight</span>
+                          </div>
+                          <p className="line-clamp-2">{ml.aiReason}</p>
+                        </div>
+                      </div>
+
+                      {/* Action Footer */}
+                      <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-[#1F324E]">
+                        <button
+                          type="button"
+                          onClick={() => openScholarshipDetail(sch)}
+                          className="flex-1 py-2 px-3 rounded-xl bg-[#142B4A] hover:bg-[#356AE6] dark:bg-[#356AE6] dark:hover:bg-[#2857C7] text-white font-bold text-xs transition text-center cursor-pointer"
+                        >
+                          AI Breakdown & Details
+                        </button>
+                        <a
+                          href={sch.applyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="py-2 px-3 rounded-xl bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] text-[#142B4A] dark:text-slate-200 font-bold text-xs transition flex items-center gap-1"
+                        >
+                          <span>Portal</span>
+                          <ExternalLink className="w-3 h-3 text-[#356AE6]" />
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </section>
+
+          {/* PRACTICAL STUDENT READINESS TOOLKIT SECTION */}
+          <section
+            id="practical-toolkit"
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-t border-slate-200 dark:border-[#1F324E]"
+          >
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-[#356AE6]">
+                  Student Success Hub
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#142B4A] dark:text-white mt-1">
+                  Practical DBT Document Readiness
+                </h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">
+                  Over 68% of rejected scholarship applications fail due to unseeded bank accounts or
+                  outdated certificates. Use this interactive readiness checklist before applying.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  {checklistReadyCount} of {PRACTICAL_CHECKLIST.length} Documents Ready
+                </span>
+              </div>
+            </div>
+
+            <div className="grid lg:grid-cols-12 gap-8">
+              {/* Interactive Checklist Cards */}
+              <div className="lg:col-span-7 space-y-3">
+                {PRACTICAL_CHECKLIST.map((item) => {
+                  const checked = !!checklistState[item.id];
+                  return (
+                    <label
+                      key={item.id}
+                      className={`flex items-start gap-3.5 p-4 rounded-xl border cursor-pointer transition-all ${
+                        checked
+                          ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800'
+                          : 'bg-white dark:bg-[#142238] border-slate-200 dark:border-[#1F324E] hover:border-[#356AE6]/50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleChecklistItem(item.id)}
+                        className="mt-1 w-4 h-4 accent-[#356AE6] rounded cursor-pointer"
+                      />
+                      <div className="flex-1">
+                        <p
+                          className={`text-sm font-bold ${
+                            checked
+                              ? 'text-emerald-900 dark:text-emerald-300 line-through'
+                              : 'text-[#142B4A] dark:text-white'
+                          }`}
+                        >
+                          {item.title}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          {item.desc}
+                        </p>
+                      </div>
+                      {checked && (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                      )}
+                    </label>
+                  );
+                })}
               </div>
 
-              {/* Top 3 Rejection Prevention Tips */}
-              <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-lg flex flex-col justify-between">
+              {/* Government DBT Avoid Rejection Guide */}
+              <div className="lg:col-span-5 bg-[#142B4A] text-white rounded-2xl p-6 sm:p-7 border border-slate-800 flex flex-col justify-between shadow-lg">
                 <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-bold mb-4">
-                    <ShieldAlert className="w-4 h-4" />
-                    <span>Avoid Instant Rejection</span>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-bold mb-4">
+                    <ShieldAlert className="w-3.5 h-3.5 text-[#F4A340]" />
+                    <span>Avoid Common Rejections</span>
                   </div>
-                  <h3 className="text-xl font-bold mb-4">3 Reasons Applications Get Rejected</h3>
-                  <ul className="space-y-4 text-sm text-slate-300">
-                    <li className="flex gap-3">
-                      <span className="w-6 h-6 rounded-full bg-white/10 text-amber-300 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                  <h3 className="text-lg font-bold text-white mb-3">
+                    Top 3 Reasons Portals Reject Applications
+                  </h3>
+                  <ul className="space-y-3.5 text-xs text-slate-300">
+                    <li className="flex gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-white/10 text-[#F4A340] font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
                         1
                       </span>
                       <span>
-                        <strong className="text-white">Aadhaar Not NPCI-Seeded:</strong> Linking
-                        Aadhaar to your bank account is not enough; enable DBT/NPCI mapping at your
-                        bank branch.
+                        <strong className="text-white">Aadhaar Bank NPCI Unseeded:</strong> Bank
+                        account must be actively mapped with NPCI DBT mapper at your branch, not just
+                        KYC linked.
                       </span>
                     </li>
-                    <li className="flex gap-3">
-                      <span className="w-6 h-6 rounded-full bg-white/10 text-amber-300 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                    <li className="flex gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-white/10 text-[#F4A340] font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
                         2
                       </span>
                       <span>
-                        <strong className="text-white">Old Income Certificate:</strong> Ensure your
-                        Tehsildar/Circle Officer income certificate is issued for the current
-                        financial year.
+                        <strong className="text-white">Expired Income Certificate:</strong> Revenue
+                        authority certificate must be for the current financial year (April onwards).
                       </span>
                     </li>
-                    <li className="flex gap-3">
-                      <span className="w-6 h-6 rounded-full bg-white/10 text-amber-300 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                    <li className="flex gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-white/10 text-[#F4A340] font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
                         3
                       </span>
                       <span>
-                        <strong className="text-white">Name Mismatch:</strong> Your name on Class 10
-                        Marksheet, Aadhaar/Passport, and Bank Passbook must match letter-for-letter.
+                        <strong className="text-white">Name Spelling Discrepancy:</strong> Name on
+                        Aadhaar, Matriculation 10th marksheet, and Bank account must match exactly.
                       </span>
                     </li>
                   </ul>
@@ -1469,10 +1757,14 @@ export default function ScholarsSathi() {
 
                 <button
                   type="button"
-                  onClick={() => setActiveView('dashboard')}
-                  className="mt-8 w-full py-3 rounded-xl bg-white text-slate-900 font-bold text-sm hover:bg-indigo-50 transition cursor-pointer"
+                  onClick={() => {
+                    setActiveView('dashboard');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="mt-6 w-full py-3 rounded-xl bg-[#F4A340] hover:bg-[#E08F2D] text-slate-950 font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2"
                 >
-                  Check Eligible Schemes Now →
+                  <span>Go to Full Explorer & Match Schemes</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -1481,120 +1773,163 @@ export default function ScholarsSathi() {
       )}
 
       {/* =================================================================== */}
-      {/* VIEW 2: FULL SCHOLARSHIP DASHBOARD                                  */}
+      {/* VIEW 2: SCHOLARSHIP DISCOVERY & DASHBOARD (CENTRAL EXPERIENCE)     */}
       {/* =================================================================== */}
       {activeView === 'dashboard' && (
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-          {/* Top Dashboard Header & API Status Pill */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                  Student Scholarship Dashboard
-                </h1>
+          {/* Top Breadcrumb & BACK BUTTON (Requirement 2: add a back button) */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-[#1F324E]">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveView('home');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-[#142B4A] dark:text-slate-200 bg-white dark:bg-[#142238] border border-slate-200 dark:border-[#1F324E] hover:bg-slate-50 dark:hover:bg-[#1B2B47] hover:border-[#356AE6] dark:hover:border-[#356AE6] transition cursor-pointer group shadow-xs"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-[#356AE6] transition-transform group-hover:-translate-x-1" />
+                <span>Back to Overview</span>
+              </button>
+
+              <span className="text-slate-300 dark:text-slate-600">/</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Scholarship Discovery & Explorer
+              </span>
+            </div>
+
+            {/* Live API Health & Connection Indicator */}
+            <div className="flex items-center gap-2.5">
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                  apiStatus.color === 'emerald'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                    : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                }`}
+              >
                 <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                  className={`w-2 h-2 rounded-full ${
                     apiStatus.color === 'emerald'
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : 'bg-amber-100 text-amber-800'
+                      ? 'bg-emerald-500'
+                      : 'bg-[#F4A340] animate-pulse'
                   }`}
-                >
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      apiStatus.color === 'emerald' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'
-                    }`}
-                  />
-                  <span>{apiStatus.label}</span>
-                </span>
-              </div>
-              <p className="text-sm text-slate-600 mt-1">
-                Personalized ML recommendations & deadline alerts based on your academic profile.
+                />
+                <span>{apiStatus.label}</span>
+              </span>
+
+              <button
+                type="button"
+                onClick={() => refreshAllData(currentUser, apiConfig)}
+                className="p-2 rounded-lg bg-white dark:bg-[#142238] border border-slate-200 dark:border-[#1F324E] text-slate-700 dark:text-slate-200 hover:text-[#356AE6] hover:border-[#356AE6] transition cursor-pointer shadow-xs"
+                title="Refresh ML match scores"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingML ? 'animate-spin text-[#356AE6]' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Dashboard Header Bar */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#142B4A] dark:text-white">
+                Scholarship Discovery Explorer
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                Evaluated against verified criteria using personalized ML matching.
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <button
                 type="button"
                 onClick={openEditProfileModal}
-                className="px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:border-indigo-500 text-slate-800 font-semibold text-sm shadow-xs flex items-center gap-2 transition cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-white dark:bg-[#142238] border border-slate-200 dark:border-[#1F324E] hover:border-[#356AE6] text-[#142B4A] dark:text-slate-200 font-bold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer"
               >
-                <SlidersHorizontal className="w-4 h-4 text-indigo-600" />
-                <span>Edit Student Profile</span>
+                <SlidersHorizontal className="w-3.5 h-3.5 text-[#356AE6]" />
+                <span>Adjust Profile</span>
               </button>
               <button
                 type="button"
                 onClick={() => refreshAllData(currentUser, apiConfig)}
-                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-xs flex items-center gap-2 transition cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer"
               >
-                <RefreshCw className={`w-4 h-4 ${isLoadingML ? 'animate-spin' : ''}`} />
-                <span>Re-Run ML Match</span>
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingML ? 'animate-spin' : ''}`} />
+                <span>Re-Evaluate ML</span>
               </button>
             </div>
           </div>
 
           {/* KPI Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-6 h-6" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-6">
+            <div className="bg-white dark:bg-[#142238] p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#1F324E] shadow-xs flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase">Eligible Schemes</p>
-                <p className="text-2xl font-extrabold text-slate-900">
+                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Eligible Schemes
+                </p>
+                <p className="text-xl sm:text-2xl font-extrabold text-[#142B4A] dark:text-white">
                   {dashboardStats.eligibleCount}
                 </p>
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-                <IndianRupee className="w-6 h-6" />
+            <div className="bg-white dark:bg-[#142238] p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#1F324E] shadow-xs flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-[#356AE6]/10 text-[#356AE6] flex items-center justify-center shrink-0">
+                <IndianRupee className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase">Potential Funding</p>
-                <p className="text-2xl font-extrabold text-slate-900">
+                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Eligible Grant Total
+                </p>
+                <p className="text-xl sm:text-2xl font-extrabold text-[#142B4A] dark:text-white">
                   ₹{dashboardStats.totalFunding.toLocaleString('en-IN')}
                 </p>
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
-                <Bell className="w-6 h-6" />
+            <div className="bg-white dark:bg-[#142238] p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#1F324E] shadow-xs flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                <Bell className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase">
+                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Closing Soon (&le;30d)
                 </p>
-                <p className="text-2xl font-extrabold text-slate-900">
+                <p className="text-xl sm:text-2xl font-extrabold text-[#142B4A] dark:text-white">
                   {dashboardStats.urgentCount}
                 </p>
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
-                <Bookmark className="w-6 h-6" />
+            <div className="bg-white dark:bg-[#142238] p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#1F324E] shadow-xs flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-[#F4A340]/15 text-[#D97706] dark:text-[#F4A340] flex items-center justify-center shrink-0">
+                <Bookmark className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase">Saved / Applied</p>
-                <p className="text-2xl font-extrabold text-slate-900">
+                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Tracked / Saved
+                </p>
+                <p className="text-xl sm:text-2xl font-extrabold text-[#142B4A] dark:text-white">
                   {dashboardStats.trackedCount}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Active Student Profile Banner Bar */}
-          <div className="bg-indigo-950 text-white rounded-2xl p-4 sm:p-5 mb-8 flex flex-wrap items-center justify-between gap-4 shadow-md">
-            <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-sm">
+          {/* Active Student Profile Banner Strip */}
+          <div className="bg-[#142B4A] text-white rounded-2xl p-4 sm:p-5 mb-6 flex flex-wrap items-center justify-between gap-3 shadow-sm border border-slate-800">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-5 text-xs">
               <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-amber-300" />
-                <span className="font-bold">{currentUser.name || 'Guest Student'}</span>
+                <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-[#F4A340]">
+                  <User className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-sm text-white">{currentUser.name || 'Guest Student'}</span>
               </div>
-              <span className="text-indigo-400 hidden sm:inline">|</span>
+              <span className="text-slate-600 hidden sm:inline">|</span>
               <div>
-                <span className="text-indigo-300 text-xs">Residency:</span>{' '}
+                <span className="text-slate-400">Residency:</span>{' '}
                 <strong>
                   {(currentUser.nationality || 'Indian') === 'Indian'
                     ? '🇮🇳 Indian'
@@ -1603,185 +1938,287 @@ export default function ScholarsSathi() {
               </div>
               {(currentUser.nationality || 'Indian') === 'Indian' && (
                 <div>
-                  <span className="text-indigo-300 text-xs">Category:</span>{' '}
+                  <span className="text-slate-400">Category:</span>{' '}
                   <strong>{currentUser.category}</strong>
                 </div>
               )}
               <div>
-                <span className="text-indigo-300 text-xs">Income:</span>{' '}
+                <span className="text-slate-400">Family Income:</span>{' '}
                 <strong>₹{Number(currentUser.income).toLocaleString('en-IN')}</strong>
               </div>
               <div>
-                <span className="text-indigo-300 text-xs">Location:</span>{' '}
+                <span className="text-slate-400">Location:</span>{' '}
                 <strong>{currentUser.state}</strong>
               </div>
               <div>
-                <span className="text-indigo-300 text-xs">Marks:</span>{' '}
-                <strong>{currentUser.marks}%</strong>
+                <span className="text-slate-400">Marks:</span>{' '}
+                <strong className="text-[#F4A340]">{currentUser.marks}%</strong>
               </div>
             </div>
             <button
               type="button"
               onClick={openEditProfileModal}
-              className="text-xs font-bold px-3.5 py-2 rounded-lg bg-amber-400 text-slate-950 hover:bg-amber-300 transition cursor-pointer"
+              className="text-xs font-bold px-3 py-1.5 rounded-lg bg-[#F4A340] text-slate-950 hover:bg-[#E08F2D] transition cursor-pointer"
             >
               Update Profile
             </button>
           </div>
 
-          {/* Search & Filter Controls */}
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          {/* Quick Category Filter Pills Bar */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
+            {[
+              { id: 'ALL', label: 'All Schemes' },
+              { id: 'Central Govt', label: 'Central Govt (NSP)' },
+              { id: 'State Govt', label: 'State Welfare Schemes' },
+              { id: 'Corporate CSR', label: 'Corporate CSR' },
+              { id: 'International', label: 'International / Global' },
+              { id: 'CLOSING_SOON', label: 'Closing Soon (≤30d)' },
+              { id: 'HIGH_VALUE', label: 'High Grant (≥₹50k)' }
+            ].map((cat) => {
+              const active = categoryQuickFilter === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setCategoryQuickFilter(cat.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                    active
+                      ? 'bg-[#356AE6] text-white shadow-xs'
+                      : 'bg-white dark:bg-[#142238] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#1F324E] hover:border-[#356AE6]'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Search, Filter & Sort Controls Bar */}
+          <div className="bg-white dark:bg-[#142238] p-4 rounded-2xl border border-slate-200/90 dark:border-[#1F324E] shadow-xs mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3">
+              {/* Search Box */}
               <div className="md:col-span-5 relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by scholarship name, ministry, or keyword..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-500"
+                  placeholder="Search by scholarship title, ministry, or keyword..."
+                  className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E] text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#356AE6]"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
+
+              {/* Eligibility Filter */}
               <div className="md:col-span-2">
                 <select
                   value={eligibilityFilter}
                   onChange={(e) => setEligibilityFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E] text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#356AE6]"
                 >
-                  <option value="ALL">All Statuses</option>
-                  <option value="ELIGIBLE">Eligible Only</option>
+                  <option value="ALL">All Match Status</option>
+                  <option value="ELIGIBLE">Fully Eligible Only</option>
                   <option value="PARTIAL">Partial Match</option>
+                  <option value="NOT_ELIGIBLE">Ineligible</option>
                 </select>
               </div>
+
+              {/* Provider Filter */}
               <div className="md:col-span-3">
                 <select
                   value={providerFilter}
                   onChange={(e) => setProviderFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E] text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#356AE6]"
                 >
-                  <option value="ALL">All Providers</option>
+                  <option value="ALL">All Scheme Providers</option>
                   <option value="Central Govt">Central Govt (NSP)</option>
-                  <option value="State Govt">State Govt</option>
+                  <option value="State Govt">State Welfare Boards</option>
                   <option value="Corporate CSR">Corporate CSR</option>
                   <option value="International">International / Global</option>
                 </select>
               </div>
+
+              {/* Sort Dropdown */}
               <div className="md:col-span-2">
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E] text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#356AE6]"
                 >
                   <option value="SCORE">Sort: ML Match %</option>
-                  <option value="DEADLINE">Sort: Earliest Deadline</option>
-                  <option value="AMOUNT">Sort: Highest Amount</option>
+                  <option value="DEADLINE">Sort: Deadline</option>
+                  <option value="AMOUNT">Sort: Grant Amount</option>
                 </select>
               </div>
             </div>
+
+            {/* Active Filters Bar and Clear Button */}
+            {hasActiveFilters && (
+              <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100 dark:border-[#1F324E] text-xs">
+                <span className="text-slate-500 dark:text-slate-400">
+                  Showing <strong>{filteredScholarships.length}</strong> matching scholarships
+                </span>
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="font-bold text-[#356AE6] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Reset All Filters</span>
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Recommended Scholarships Grid */}
+          {/* Scholarship Discovery Cards Grid */}
           {filteredScholarships.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-3xl border border-slate-200">
-              <p className="text-lg font-bold text-slate-800">No matching scholarships found</p>
-              <p className="text-sm text-slate-500 mt-1">
-                Try resetting your search filters or updating your student profile.
+            <div className="text-center py-16 bg-white dark:bg-[#142238] rounded-2xl border border-slate-200 dark:border-[#1F324E] p-8">
+              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center mb-3">
+                <Search className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-[#142B4A] dark:text-white">
+                No matching scholarships found
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1 mb-4">
+                Try widening your search terms, resetting category filters, or updating your student
+                qualifying marks and income profile.
               </p>
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="px-4 py-2 rounded-xl bg-[#356AE6] text-white font-bold text-xs cursor-pointer"
+              >
+                Reset Search Filters
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredScholarships.map((sch) => {
                 const { matchScore, status, aiReason } = sch.mlResult;
-                const badgeStyle =
-                  status === 'ELIGIBLE'
-                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                    : status === 'PARTIAL'
-                    ? 'bg-amber-100 text-amber-800 border-amber-200'
-                    : 'bg-slate-100 text-slate-600 border-slate-200';
-                const badgeText =
-                  status === 'ELIGIBLE'
-                    ? 'Eligible'
-                    : status === 'PARTIAL'
-                    ? 'Partial Match'
-                    : 'Not Eligible';
+                const isEligible = status === 'ELIGIBLE';
+                const isPartial = status === 'PARTIAL';
+                const currentStatus = trackedApplications[sch.id] || '';
 
                 return (
                   <div
                     key={sch.id}
-                    className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs hover:shadow-xl hover:border-indigo-300 transition flex flex-col justify-between"
+                    className="bg-white dark:bg-[#142238] rounded-2xl border border-slate-200/90 dark:border-[#1F324E] p-5 sm:p-6 shadow-[0_2px_8px_rgba(20,43,74,0.04)] hover:shadow-lg hover:border-[#356AE6]/50 transition-all flex flex-col justify-between"
                   >
                     <div>
+                      {/* Top Badges: Status & Deadline */}
                       <div className="flex items-center justify-between gap-2 mb-3">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-bold border ${badgeStyle}`}
+                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                            isEligible
+                              ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                              : isPartial
+                              ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                          }`}
                         >
-                          {badgeText} • {matchScore}%
+                          {isEligible ? 'Eligible' : isPartial ? 'Partial Match' : 'Not Eligible'} •{' '}
+                          {matchScore}%
                         </span>
 
                         {sch.deadlineDays <= 30 ? (
-                          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700 animate-pulse">
-                            Closes in {sch.deadlineDays}d
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            <span>{sch.deadlineDays}d left</span>
                           </span>
                         ) : (
-                          <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                             {sch.deadlineDate}
                           </span>
                         )}
                       </div>
 
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600">
+                      {/* Provider & Title */}
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#356AE6]">
                         {sch.provider}
                       </span>
-                      <h3 className="text-lg font-extrabold text-slate-900 mt-1 leading-snug">
+                      <h3 className="text-base font-extrabold text-[#142B4A] dark:text-white mt-1 leading-snug line-clamp-2">
                         {sch.title}
                       </h3>
-                      <p className="text-xs text-slate-500 mt-1">{sch.ministry}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
+                        <Building2 className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                        <span className="truncate">{sch.ministry}</span>
+                      </p>
 
-                      {/* Grant Amount */}
-                      <div className="my-4 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                      {/* Benefit Grant Box */}
+                      <div className="my-3.5 p-3 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-100 dark:border-[#1F324E] flex items-center justify-between">
                         <div>
-                          <span className="text-[11px] text-slate-500 block">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase block">
                             Scholarship Benefit
                           </span>
-                          <span className="text-xl font-extrabold text-indigo-700">
-                            ₹{sch.amount.toLocaleString('en-IN')}{' '}
-                            <span className="text-xs font-normal text-slate-500">/ yr</span>
+                          <span className="text-lg font-extrabold text-[#142B4A] dark:text-white flex items-center">
+                            <IndianRupee className="w-4 h-4 text-[#356AE6]" />
+                            {sch.amount.toLocaleString('en-IN')}{' '}
+                            <span className="text-[11px] font-normal text-slate-500 ml-1">/ yr</span>
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="text-[11px] text-slate-500 block">Min Marks</span>
-                          <span className="text-sm font-bold text-slate-800">{sch.minMarks}%</span>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                            Min Marks
+                          </span>
+                          <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                            {sch.minMarks}%
+                          </span>
                         </div>
                       </div>
 
-                      {/* AI Explanation Snippet */}
-                      <div className="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-xs text-slate-700 leading-relaxed mb-5">
-                        <div className="flex items-center gap-1.5 font-bold text-indigo-700 mb-1">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span>ML Eligibility Insight</span>
+                      {/* AI Eligibility Insight Snippet */}
+                      <div className="p-3 rounded-xl bg-[#356AE6]/5 dark:bg-[#356AE6]/10 border border-[#356AE6]/15 text-xs text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
+                        <div className="flex items-center gap-1 font-bold text-[#356AE6] mb-1">
+                          <Sparkles className="w-3.5 h-3.5 text-[#F4A340]" />
+                          <span>ML Match Insight</span>
                         </div>
-                        <p className="line-clamp-3">{aiReason}</p>
+                        <p className="line-clamp-2">{aiReason}</p>
                       </div>
                     </div>
 
-                    {/* Action Footer */}
-                    <div className="flex items-center gap-2.5 pt-3 border-t border-slate-100">
-                      <button
-                        type="button"
-                        onClick={() => openScholarshipDetail(sch)}
-                        className="flex-1 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white font-bold text-xs transition text-center cursor-pointer"
-                      >
-                        AI Breakdown & Details
-                      </button>
-                      <a
-                        href={sch.applyUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="py-2.5 px-3.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition flex items-center gap-1"
-                      >
-                        <span>Apply</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
+                    {/* Action Footer & Application Tracking */}
+                    <div className="pt-3 border-t border-slate-100 dark:border-[#1F324E] space-y-2">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openScholarshipDetail(sch)}
+                          className="flex-1 py-2 px-3 rounded-xl bg-[#142B4A] hover:bg-[#356AE6] dark:bg-[#356AE6] dark:hover:bg-[#2857C7] text-white font-bold text-xs transition text-center cursor-pointer"
+                        >
+                          AI Breakdown & Details
+                        </button>
+                        <a
+                          href={sch.applyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="py-2 px-3 rounded-xl bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] text-[#142B4A] dark:text-slate-200 font-bold text-xs transition flex items-center gap-1"
+                          title="Apply on Official Portal"
+                        >
+                          <span>Apply</span>
+                          <ExternalLink className="w-3.5 h-3.5 text-[#356AE6]" />
+                        </a>
+                      </div>
+
+                      {/* Quick Status Pill */}
+                      <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                        <span>My Tracker:</span>
+                        <select
+                          value={currentStatus}
+                          onChange={(e) => handleStatusChange(sch.id, e.target.value)}
+                          className="bg-transparent font-bold text-xs text-[#356AE6] cursor-pointer focus:outline-none"
+                        >
+                          <option value="">+ Mark Status</option>
+                          <option value="Saved">📌 Saved for Later</option>
+                          <option value="Applied">✓ Applied</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 );
@@ -1793,140 +2230,175 @@ export default function ScholarsSathi() {
 
       {/* =================================================================== */}
       {/* MODAL 1: SCHOLARSHIP DETAILS & AI EXPLANATION                       */}
+      {/* (Includes dedicated BACK BUTTON)                                   */}
       {/* =================================================================== */}
       {detailModal.open && detailModal.scholarship && (
         <div
-          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-[#142B4A]/60 dark:bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
           onClick={() => setDetailModal({ ...detailModal, open: false })}
         >
           <div
-            className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 p-6 sm:p-8 relative"
+            className="bg-white dark:bg-[#142238] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 dark:border-[#1F324E] p-6 sm:p-8 relative my-auto text-[#263449] dark:text-slate-100"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              type="button"
-              onClick={() => setDetailModal({ ...detailModal, open: false })}
-              className="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {/* Top Navigation Row: Dedicated BACK BUTTON & Close Button */}
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-[#1F324E]">
+              <button
+                type="button"
+                onClick={() => setDetailModal({ ...detailModal, open: false })}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[#142B4A] dark:text-slate-200 bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] transition cursor-pointer group"
+              >
+                <ArrowLeft className="w-4 h-4 text-[#356AE6] transition-transform group-hover:-translate-x-1" />
+                <span>Back to Scholarships</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDetailModal({ ...detailModal, open: false })}
+                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
             {detailModal.loading ? (
-              <div className="py-12 text-center text-slate-500 font-semibold">
-                Querying ML Model API for personalized explanation...
+              <div className="py-16 text-center text-slate-500 dark:text-slate-400 font-semibold space-y-3">
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#356AE6]" />
+                <p>Querying ML Model API for personalized eligibility breakdown...</p>
               </div>
             ) : (
               (() => {
                 const sch = detailModal.scholarship;
                 const ml = detailModal.mlDetail;
                 const currentStatus = trackedApplications[sch.id] || '';
+
                 return (
                   <div>
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
-                      {sch.provider}
-                    </span>
-                    <h2 className="text-2xl font-extrabold text-slate-900 mt-2">{sch.title}</h2>
-                    <p className="text-sm text-slate-500 mt-1">{sch.ministry}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#356AE6]/10 text-[#356AE6]">
+                        {sch.provider}
+                      </span>
+                      <span className="text-xs text-slate-400">•</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{sch.ministry}</span>
+                    </div>
 
-                    <div className="grid grid-cols-3 gap-4 my-6">
-                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                        <span className="text-xs text-slate-500">Grant Amount</span>
-                        <p className="text-xl font-extrabold text-indigo-700 mt-0.5">
-                          ₹{sch.amount.toLocaleString('en-IN')}
+                    <h2 className="text-2xl font-extrabold text-[#142B4A] dark:text-white mt-2">
+                      {sch.title}
+                    </h2>
+
+                    {/* Quick Metric Cards */}
+                    <div className="grid grid-cols-3 gap-3 my-6">
+                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E]">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                          Benefit Grant
+                        </span>
+                        <p className="text-lg font-extrabold text-[#142B4A] dark:text-white mt-0.5 flex items-center">
+                          <IndianRupee className="w-4 h-4 text-[#356AE6]" />
+                          {sch.amount.toLocaleString('en-IN')}
                         </p>
                       </div>
-                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                        <span className="text-xs text-slate-500">Deadline</span>
-                        <p className="text-xl font-extrabold text-rose-600 mt-0.5">
+                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E]">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                          Deadline
+                        </span>
+                        <p className="text-lg font-extrabold text-rose-600 dark:text-rose-400 mt-0.5">
                           {sch.deadlineDate}
                         </p>
                       </div>
-                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                        <span className="text-xs text-slate-500">ML Match Score</span>
-                        <p className="text-xl font-extrabold text-emerald-600 mt-0.5">
+                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0F1A2E] border border-slate-200 dark:border-[#1F324E]">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                          ML Match Score
+                        </span>
+                        <p className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">
                           {ml.matchScore}%
                         </p>
                       </div>
                     </div>
 
                     {/* AI Explanation Box */}
-                    <div className="p-5 rounded-2xl bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-200 mb-6">
-                      <div className="flex items-center gap-2 font-extrabold text-indigo-900 text-sm mb-2">
-                        <Bot className="w-5 h-5 text-indigo-600" />
-                        <span>AI-Generated Eligibility Explanation</span>
+                    <div className="p-4 rounded-xl bg-[#356AE6]/10 dark:bg-[#356AE6]/15 border border-[#356AE6]/20 mb-6">
+                      <div className="flex items-center gap-2 font-extrabold text-[#142B4A] dark:text-white text-xs mb-1.5">
+                        <Bot className="w-4 h-4 text-[#356AE6]" />
+                        <span>AI-Generated Eligibility Assessment</span>
                       </div>
-                      <p className="text-sm text-slate-700 leading-relaxed">{ml.aiReason}</p>
+                      <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                        {ml.aiReason}
+                      </p>
                     </div>
 
-                    {/* Criterion-by-Criterion Breakdown */}
-                    <h4 className="font-bold text-slate-900 text-sm mb-3">
+                    {/* Criteria Evaluation Checklist */}
+                    <h4 className="font-bold text-[#142B4A] dark:text-white text-xs uppercase tracking-wider mb-2.5">
                       Criterion-by-Criterion Evaluation
                     </h4>
-                    <div className="space-y-2.5 mb-6">
+                    <div className="space-y-2 mb-6">
                       {(ml.criteriaBreakdown || []).map((c, idx) => (
                         <div
                           key={idx}
                           className={`flex items-center justify-between p-3 rounded-xl border ${
                             c.passed
-                              ? 'bg-emerald-50/50 border-emerald-200'
-                              : 'bg-rose-50/50 border-rose-200'
+                              ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800'
+                              : 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800'
                           }`}
                         >
                           <div>
-                            <p className="text-xs font-bold text-slate-900">{c.label}</p>
-                            <p className="text-xs text-slate-600">{c.detail}</p>
+                            <p className="text-xs font-bold text-[#142B4A] dark:text-white">{c.label}</p>
+                            <p className="text-xs text-slate-600 dark:text-slate-400">{c.detail}</p>
                           </div>
                           <span
-                            className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                               c.passed
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : 'bg-rose-100 text-rose-800'
+                                ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200'
+                                : 'bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200'
                             }`}
                           >
-                            {c.passed ? 'PASS' : 'MISMATCH'}
+                            {c.passed ? 'PASSED' : 'MISMATCH'}
                           </span>
                         </div>
                       ))}
                     </div>
 
                     {/* Required Documents */}
-                    <h4 className="font-bold text-slate-900 text-sm mb-2">
+                    <h4 className="font-bold text-[#142B4A] dark:text-white text-xs uppercase tracking-wider mb-2">
                       Required Documents Checklist
                     </h4>
                     <ul className="grid sm:grid-cols-2 gap-2 mb-6">
                       {sch.documents.map((doc, idx) => (
                         <li
                           key={idx}
-                          className="flex items-center gap-2 text-xs text-slate-700 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200"
+                          className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#0F1A2E] px-3 py-2 rounded-xl border border-slate-200 dark:border-[#1F324E]"
                         >
-                          <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
+                          <FileText className="w-3.5 h-3.5 text-[#356AE6] shrink-0" />
                           <span>{doc}</span>
                         </li>
                       ))}
                     </ul>
 
-                    {/* Track Status & Direct Official Link */}
-                    <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-200">
+                    {/* Tracking Status & Direct Official Link */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-[#1F324E]">
                       <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-slate-700">My Status:</label>
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          My Status:
+                        </label>
                         <select
                           value={currentStatus}
                           onChange={(e) => handleStatusChange(sch.id, e.target.value)}
-                          className="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"
+                          className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-xs font-bold text-slate-800 dark:text-white"
                         >
                           <option value="">Not Applied</option>
                           <option value="Saved">Saved for Later</option>
                           <option value="Applied">Submitted Application</option>
                         </select>
                       </div>
+
                       <a
                         href={sch.applyUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md flex items-center gap-2"
+                        className="px-5 py-2.5 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer"
                       >
-                        <span>Proceed to Official Portal</span>
-                        <ExternalLink className="w-4 h-4" />
+                        <span>Apply on Official Portal</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     </div>
                   </div>
@@ -1938,131 +2410,147 @@ export default function ScholarsSathi() {
       )}
 
       {/* =================================================================== */}
-      {/* MODAL 2: LOGIN & REGISTRATION MODAL (CONDITIONAL RESIDENCY TOGGLE)  */}
+      {/* MODAL 2: LOGIN & REGISTRATION MODAL                                 */}
       {/* =================================================================== */}
       {authModal.open && (
         <div
-          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-[#142B4A]/60 dark:bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
           onClick={() => setAuthModal({ ...authModal, open: false })}
         >
           <div
-            className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 p-6 sm:p-8 relative my-auto"
+            className="bg-white dark:bg-[#142238] rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-[#1F324E] p-6 sm:p-8 relative my-auto text-[#263449] dark:text-slate-100"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => setAuthModal({ ...authModal, open: false })}
-              className="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 cursor-pointer"
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
 
-            <div className="flex gap-2 p-1 bg-slate-100 rounded-xl mb-6 w-fit">
+            {/* Login / Register Tab Switcher */}
+            <div className="flex gap-1.5 p-1 bg-slate-100 dark:bg-[#0F1A2E] rounded-xl mb-6 w-fit border border-slate-200 dark:border-[#1F324E]">
               <button
                 type="button"
                 onClick={() => setAuthModal({ open: true, tab: 'login' })}
-                className={`px-5 py-2 rounded-lg text-sm font-bold transition cursor-pointer ${
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                   authModal.tab === 'login'
-                    ? 'bg-white text-indigo-600 shadow-xs'
-                    : 'text-slate-600'
+                    ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
-                Login
+                Sign In
               </button>
               <button
                 type="button"
                 onClick={() => setAuthModal({ open: true, tab: 'register' })}
-                className={`px-5 py-2 rounded-lg text-sm font-bold transition cursor-pointer ${
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                   authModal.tab === 'register'
-                    ? 'bg-white text-indigo-600 shadow-xs'
-                    : 'text-slate-600'
+                    ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
-                Register
+                Create Account
               </button>
             </div>
 
             {authModal.tab === 'login' ? (
               <form onSubmit={handleLoginSubmit} className="space-y-4">
-                <h3 className="text-2xl font-extrabold text-slate-900">
-                  Welcome Back to Scholars Sathi
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Connects to{' '}
-                  <code className="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-600">
-                    POST /api/auth/login
-                  </code>
-                </p>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Student Email
+                  <h3 className="text-xl font-extrabold text-[#142B4A] dark:text-white">
+                    Sign In to Scholars Sathi
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Connects to backend route:{' '}
+                    <code className="bg-slate-100 dark:bg-[#0F1A2E] px-1 py-0.5 rounded text-[#356AE6]">
+                      /auth/login
+                    </code>
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Student Email Address
                   </label>
                   <input
                     type="email"
                     required
                     value={loginForm.email}
                     onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-indigo-600"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#356AE6]"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Password
+                  </label>
                   <input
                     type="password"
                     required
                     value={loginForm.password}
                     onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-indigo-600"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#356AE6]"
                   />
                 </div>
+
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md transition cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-md transition cursor-pointer"
                 >
-                  Sign In & Load Profile
+                  Sign In & Load Matched Schemes
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
-                <h3 className="text-2xl font-extrabold text-slate-900">Create Student Account</h3>
-                <p className="text-xs text-slate-500">
-                  Connects to{' '}
-                  <code className="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-600">
-                    POST /api/auth/register
-                  </code>
-                </p>
+              <form onSubmit={handleRegisterSubmit} className="space-y-3">
+                <div>
+                  <h3 className="text-xl font-extrabold text-[#142B4A] dark:text-white">
+                    Create Student Profile
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Connects to backend route:{' '}
+                    <code className="bg-slate-100 dark:bg-[#0F1A2E] px-1 py-0.5 rounded text-[#356AE6]">
+                      /auth/register
+                    </code>
+                  </p>
+                </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2.5">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Full Name
+                    </label>
                     <input
                       type="text"
                       required
-                      placeholder="Priya Sharma"
+                      placeholder="Ananya Roy"
                       value={registerForm.name}
                       onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Email</label>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Email
+                    </label>
                     <input
                       type="email"
                       required
-                      placeholder="priya@college.edu"
+                      placeholder="ananya@college.edu"
                       value={registerForm.email}
                       onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                     />
                   </div>
                 </div>
 
-                {/* Residency / Nationality Toggle */}
+                {/* Residency / Nationality Selector */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Nationality / Residency
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Citizenship Status
                   </label>
-                  <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100">
+                  <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-[#0F1A2E]">
                     <button
                       type="button"
                       onClick={() =>
@@ -2075,8 +2563,8 @@ export default function ScholarsSathi() {
                       }
                       className={`py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                         registerForm.nationality === 'Indian'
-                          ? 'bg-white text-indigo-600 shadow-xs'
-                          : 'text-slate-600'
+                          ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       🇮🇳 Indian Citizen
@@ -2093,8 +2581,8 @@ export default function ScholarsSathi() {
                       }
                       className={`py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                         registerForm.nationality === 'International'
-                          ? 'bg-white text-indigo-600 shadow-xs'
-                          : 'text-slate-600'
+                          ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       🌍 Outside India
@@ -2102,9 +2590,11 @@ export default function ScholarsSathi() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2.5">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Password
+                    </label>
                     <input
                       type="password"
                       required
@@ -2113,22 +2603,21 @@ export default function ScholarsSathi() {
                       onChange={(e) =>
                         setRegisterForm({ ...registerForm, password: e.target.value })
                       }
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                     />
                   </div>
 
-                  {/* Category appears ONLY when Indian Citizen is selected */}
                   {registerForm.nationality === 'Indian' ? (
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Social Category
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Category
                       </label>
                       <select
                         value={registerForm.category}
                         onChange={(e) =>
                           setRegisterForm({ ...registerForm, category: e.target.value })
                         }
-                        className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                       >
                         {INDIAN_CATEGORIES.map((c) => (
                           <option key={c} value={c}>
@@ -2139,13 +2628,15 @@ export default function ScholarsSathi() {
                     </div>
                   ) : (
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Region</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Region
+                      </label>
                       <select
                         value={registerForm.state}
                         onChange={(e) =>
                           setRegisterForm({ ...registerForm, state: e.target.value })
                         }
-                        className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                       >
                         {INTERNATIONAL_REGIONS.map((r) => (
                           <option key={r} value={r}>
@@ -2160,11 +2651,11 @@ export default function ScholarsSathi() {
                 <div
                   className={`grid ${
                     registerForm.nationality === 'Indian' ? 'grid-cols-3' : 'grid-cols-2'
-                  } gap-3`}
+                  } gap-2.5`}
                 >
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Income (₹/yr)
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Income (₹)
                     </label>
                     <input
                       type="number"
@@ -2173,18 +2664,20 @@ export default function ScholarsSathi() {
                       onChange={(e) =>
                         setRegisterForm({ ...registerForm, income: e.target.value })
                       }
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                     />
                   </div>
                   {registerForm.nationality === 'Indian' && (
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">State</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        State
+                      </label>
                       <select
                         value={registerForm.state}
                         onChange={(e) =>
                           setRegisterForm({ ...registerForm, state: e.target.value })
                         }
-                        className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                       >
                         {INDIAN_STATES.map((st) => (
                           <option key={st} value={st}>
@@ -2195,7 +2688,9 @@ export default function ScholarsSathi() {
                     </div>
                   )}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Marks (%)</label>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Marks (%)
+                    </label>
                     <input
                       type="number"
                       required
@@ -2204,13 +2699,13 @@ export default function ScholarsSathi() {
                       onChange={(e) =>
                         setRegisterForm({ ...registerForm, marks: e.target.value })
                       }
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Course Level
                   </label>
                   <select
@@ -2218,7 +2713,7 @@ export default function ScholarsSathi() {
                     onChange={(e) =>
                       setRegisterForm({ ...registerForm, course: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                   >
                     {COURSES.map((c) => (
                       <option key={c} value={c}>
@@ -2230,9 +2725,9 @@ export default function ScholarsSathi() {
 
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md transition cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-md transition cursor-pointer"
                 >
-                  Register & Match Scholarships
+                  Register Account & Recalculate
                 </button>
               </form>
             )}
@@ -2245,35 +2740,35 @@ export default function ScholarsSathi() {
       {/* =================================================================== */}
       {profileModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-[#142B4A]/60 dark:bg-black/70 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setProfileModalOpen(false)}
         >
           <div
-            className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 p-6 sm:p-8 relative"
+            className="bg-white dark:bg-[#142238] rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-[#1F324E] p-6 sm:p-8 relative text-[#263449] dark:text-slate-100"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => setProfileModalOpen(false)}
-              className="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 cursor-pointer"
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
 
-            <h3 className="text-xl font-extrabold text-slate-900 mb-1">
+            <h3 className="text-xl font-extrabold text-[#142B4A] dark:text-white mb-1">
               Edit Academic & Financial Profile
             </h3>
-            <p className="text-xs text-slate-500 mb-5">
-              Updates your profile & immediately recalculates ML eligibility scores.
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
+              Updates your profile & dynamically triggers ML match recalculation.
             </p>
 
             <form onSubmit={handleProfileSave} className="space-y-4">
               {/* Nationality Selector */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Nationality / Residency
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Residency Status
                 </label>
-                <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100">
+                <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-[#0F1A2E]">
                   <button
                     type="button"
                     onClick={() =>
@@ -2287,8 +2782,8 @@ export default function ScholarsSathi() {
                     }
                     className={`py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
                       profileForm.nationality === 'Indian'
-                        ? 'bg-white text-indigo-600 shadow-xs'
-                        : 'text-slate-600'
+                        ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     🇮🇳 Indian Citizen
@@ -2305,8 +2800,8 @@ export default function ScholarsSathi() {
                     }
                     className={`py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
                       profileForm.nationality === 'International'
-                        ? 'bg-white text-indigo-600 shadow-xs'
-                        : 'text-slate-600'
+                        ? 'bg-white dark:bg-[#1B2B47] text-[#142B4A] dark:text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     🌍 Outside India
@@ -2317,23 +2812,23 @@ export default function ScholarsSathi() {
               <div
                 className={`grid ${
                   profileForm.nationality === 'Indian' ? 'grid-cols-2' : 'grid-cols-1'
-                } gap-3`}
+                } gap-2.5`}
               >
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Student Name
                   </label>
                   <input
                     type="text"
                     value={profileForm.name}
                     onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                   />
                 </div>
 
                 {profileForm.nationality === 'Indian' && (
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                       Social Category
                     </label>
                     <select
@@ -2341,7 +2836,7 @@ export default function ScholarsSathi() {
                       onChange={(e) =>
                         setProfileForm({ ...profileForm, category: e.target.value })
                       }
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                     >
                       {INDIAN_CATEGORIES.map((c) => (
                         <option key={c} value={c}>
@@ -2353,26 +2848,26 @@ export default function ScholarsSathi() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Annual Family Income (₹)
                   </label>
                   <input
                     type="number"
                     value={profileForm.income}
                     onChange={(e) => setProfileForm({ ...profileForm, income: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {profileForm.nationality === 'Indian' ? 'Home State' : 'Region'}
                   </label>
                   <select
                     value={profileForm.state}
                     onChange={(e) => setProfileForm({ ...profileForm, state: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                   >
                     {(profileForm.nationality === 'Indian'
                       ? INDIAN_STATES
@@ -2386,9 +2881,9 @@ export default function ScholarsSathi() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Qualifying Marks (%)
                   </label>
                   <input
@@ -2398,17 +2893,17 @@ export default function ScholarsSathi() {
                     max="100"
                     value={profileForm.marks}
                     onChange={(e) => setProfileForm({ ...profileForm, marks: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Course Level
                   </label>
                   <select
                     value={profileForm.course}
                     onChange={(e) => setProfileForm({ ...profileForm, course: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs"
                   >
                     {COURSES.map((c) => (
                       <option key={c} value={c}>
@@ -2421,7 +2916,7 @@ export default function ScholarsSathi() {
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md transition cursor-pointer"
+                className="w-full py-3 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-md transition cursor-pointer"
               >
                 Save Profile & Recalculate ML Scores
               </button>
@@ -2431,90 +2926,273 @@ export default function ScholarsSathi() {
       )}
 
       {/* =================================================================== */}
-      {/* MODAL 4: LIVE API ENDPOINT CONFIGURATION MODAL                      */}
+      {/* MODAL 4: BACKEND & ML API INTEGRATION CONFIG MODAL                  */}
       {/* =================================================================== */}
       {apiConfigModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-[#142B4A]/60 dark:bg-black/70 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setApiConfigModalOpen(false)}
         >
           <div
-            className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 p-6 sm:p-8 relative"
+            className="bg-white dark:bg-[#142238] rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 dark:border-[#1F324E] p-6 sm:p-8 relative text-[#263449] dark:text-slate-100"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => setApiConfigModalOpen(false)}
-              className="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 cursor-pointer"
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#0F1A2E] hover:bg-slate-200 dark:hover:bg-[#1B2B47] flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
 
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[#356AE6]/10 text-[#356AE6] flex items-center justify-center">
                 <Server className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-xl font-extrabold text-slate-900">
-                  Backend & ML API Integration
+                <h3 className="text-xl font-extrabold text-[#142B4A] dark:text-white">
+                  Backend & ML Model Endpoints
                 </h3>
-                <p className="text-xs text-slate-500">
-                  Configure your live Backend REST API & Python ML Model API endpoints
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Configure live REST API server and Python ML Model prediction endpoints
                 </p>
               </div>
             </div>
 
             <form onSubmit={handleSaveApiConfig} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Backend Server Base URL (Auth, Profile, Scholarships DB)
                 </label>
                 <input
                   type="url"
                   value={cfgForm.backendUrl}
                   onChange={(e) => setCfgForm({ ...cfgForm, backendUrl: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs font-mono"
                   placeholder="http://localhost:5000/api"
                 />
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Routes used: <code>/auth/login</code>, <code>/auth/register</code>,{' '}
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  Endpoints used: <code>/auth/login</code>, <code>/auth/register</code>,{' '}
                   <code>/student/profile</code>, <code>/scholarships</code>
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   ML Model API Base URL (Predictions & AI Explanations)
                 </label>
                 <input
                   type="url"
                   value={cfgForm.mlUrl}
                   onChange={(e) => setCfgForm({ ...cfgForm, mlUrl: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#1F324E] bg-white dark:bg-[#0F1A2E] text-slate-900 dark:text-white text-xs font-mono"
                   placeholder="http://localhost:8000/ml"
                 />
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Routes used: <code>/predict-eligibility</code>, <code>/explain-match</code>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  Endpoints used: <code>/predict-eligibility</code>, <code>/explain-match</code>
                 </p>
               </div>
 
-              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs text-slate-600">
-                <strong>Expected ML Response Schema:</strong>
-                <pre className="mt-1.5 text-[11px] overflow-x-auto text-slate-800">
-                  {`{ "predictions": [{ "scholarshipId": 1, "matchScore": 94, "status": "ELIGIBLE", "aiReason": "...", "criteriaBreakdown": [...] }] }`}
+              <div className="bg-slate-50 dark:bg-[#0F1A2E] p-3.5 rounded-xl border border-slate-200 dark:border-[#1F324E] text-xs text-slate-600 dark:text-slate-300">
+                <strong className="text-[#142B4A] dark:text-white">Active Response Protocol:</strong>
+                <pre className="mt-1.5 text-[11px] overflow-x-auto text-slate-800 dark:text-slate-300 font-mono">
+                  {`{ "predictions": [{ "scholarshipId": 1, "matchScore": 94, "status": "ELIGIBLE", "aiReason": "..." }] }`}
                 </pre>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md transition cursor-pointer"
+                className="w-full py-3 rounded-xl bg-[#356AE6] hover:bg-[#2857C7] text-white font-bold text-xs shadow-md transition cursor-pointer"
               >
-                Save Endpoints & Test Connection
+                Save Endpoints & Connect
               </button>
             </form>
           </div>
         </div>
       )}
+
+      {/* =================================================================== */}
+      {/* GOVERNMENT-TECH & EDTECH FOOTER                                     */}
+      {/* =================================================================== */}
+      <footer className="mt-auto bg-[#142B4A] text-slate-300 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-white/10 text-xs">
+            {/* Col 1: Identity */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-[#356AE6] text-white flex items-center justify-center">
+                  <GraduationCap className="w-5 h-5 text-[#F4A340]" />
+                </div>
+                <span className="text-lg font-extrabold text-white">
+                  Scholarship <span className="text-[#F4A340]">Sathi</span>
+                </span>
+              </div>
+              <p className="text-slate-400 leading-relaxed">
+                National EdTech + Government-Tech platform for transparent scholarship discovery,
+                AI-verified eligibility calculations, and DBT Aadhaar-seeding readiness.
+              </p>
+              <div className="flex items-center gap-2 text-[11px] text-emerald-400 font-semibold">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Zero Agent Commission • Direct Portals</span>
+              </div>
+            </div>
+
+            {/* Col 2: Official Portals */}
+            <div>
+              <h4 className="font-extrabold text-white uppercase tracking-wider mb-3">
+                Official Portals
+              </h4>
+              <ul className="space-y-2 text-slate-400">
+                <li>
+                  <a
+                    href="https://scholarships.gov.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white transition flex items-center gap-1"
+                  >
+                    <span>National Scholarship Portal (NSP)</span>
+                    <ExternalLink className="w-3 h-3 text-slate-500" />
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://www.aicte-india.org"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white transition flex items-center gap-1"
+                  >
+                    <span>AICTE Pragati / Saksham</span>
+                    <ExternalLink className="w-3 h-3 text-slate-500" />
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://www.ugc.gov.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white transition flex items-center gap-1"
+                  >
+                    <span>UGC Ishan Uday Portal</span>
+                    <ExternalLink className="w-3 h-3 text-slate-500" />
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://www.studyinindia.gov.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white transition flex items-center gap-1"
+                  >
+                    <span>Study in India (SII) Portal</span>
+                    <ExternalLink className="w-3 h-3 text-slate-500" />
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Col 3: Student Tools */}
+            <div>
+              <h4 className="font-extrabold text-white uppercase tracking-wider mb-3">
+                Student Resources
+              </h4>
+              <ul className="space-y-2 text-slate-400">
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveView('home');
+                      setTimeout(() => {
+                        document
+                          .getElementById('practical-toolkit')
+                          ?.scrollIntoView({ behavior: 'smooth' });
+                      }, 100);
+                    }}
+                    className="hover:text-white transition text-left cursor-pointer"
+                  >
+                    NPCI Aadhaar Bank Seeding Guide
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveView('dashboard');
+                      setEligibilityFilter('ELIGIBLE');
+                    }}
+                    className="hover:text-white transition text-left cursor-pointer"
+                  >
+                    Eligible Schemes Tracker
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={openEditProfileModal}
+                    className="hover:text-white transition text-left cursor-pointer"
+                  >
+                    Student Academic Profile
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCfgForm({
+                        backendUrl: apiConfig.BACKEND_BASE_URL,
+                        mlUrl: apiConfig.ML_API_BASE_URL
+                      });
+                      setApiConfigModalOpen(true);
+                    }}
+                    className="hover:text-white transition text-left cursor-pointer"
+                  >
+                    Configure Local / Live ML Engine
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Col 4: National Helpline */}
+            <div>
+              <h4 className="font-extrabold text-white uppercase tracking-wider mb-3">
+                National Helpline & Support
+              </h4>
+              <p className="text-slate-400 mb-2">
+                NSP Helpdesk: <strong className="text-white">0120 - 6619540</strong>
+              </p>
+              <p className="text-slate-400 mb-2">
+                Toll-Free DBT: <strong className="text-white">1800 - 11 - 2001</strong>
+              </p>
+              <p className="text-[11px] text-slate-400">
+                Email:{' '}
+                <a
+                  href="mailto:helpdesk@nsp.gov.in"
+                  className="text-[#356AE6] hover:underline"
+                >
+                  helpdesk@nsp.gov.in
+                </a>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 gap-3">
+            <p>
+              © {new Date().getFullYear()} Scholarship Sathi. Designed under Modern EdTech +
+              Government-Tech Minimalism guidelines.
+            </p>
+            <div className="flex items-center gap-4">
+              <span>National Direct Benefit Transfer (DBT) Compliant</span>
+              <span>•</span>
+              <button
+                type="button"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="hover:text-white transition cursor-pointer text-[#F4A340] font-bold"
+              >
+                Back to Top ↑
+              </button>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

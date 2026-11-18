@@ -829,7 +829,7 @@ export default function ScholarsSathi() {
   const dashboardStats = useMemo(() => {
     const eligible = enrichedScholarships.filter((s) => s.mlResult?.status === 'ELIGIBLE');
     const funding = eligible.reduce((sum, s) => sum + s.amount, 0);
-    const urgent = eligible.filter((s) => s.deadlineDays <= 15).length;
+    const urgent = eligible.filter((s) => s.deadlineDays <= 30).length;
     const tracked = Object.values(trackedApplications).filter(Boolean).length;
     return {
       eligibleCount: eligible.length,
@@ -1562,7 +1562,7 @@ export default function ScholarsSathi() {
               </div>
               <div>
                 <p className="text-xs font-semibold text-slate-500 uppercase">
-                  Closing Soon (&le;15d)
+                  Closing Soon (&le;30d)
                 </p>
                 <p className="text-2xl font-extrabold text-slate-900">
                   {dashboardStats.urgentCount}
@@ -1716,7 +1716,7 @@ export default function ScholarsSathi() {
                           {badgeText} • {matchScore}%
                         </span>
 
-                        {sch.deadlineDays <= 15 ? (
+                        {sch.deadlineDays <= 30 ? (
                           <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700 animate-pulse">
                             Closes in {sch.deadlineDays}d
                           </span>
